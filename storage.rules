@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// SUNspot does not use Firebase Storage — images are served via Cloudinary
+// (see utils/image.js), and firebase.js only exports `auth` and `db`. So the
+// bucket is locked down entirely: no client reads or writes. If Storage is ever
+// adopted, replace the catch-all below with path-scoped, owner-checked rules.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

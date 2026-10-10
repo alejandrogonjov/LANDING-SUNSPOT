@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Reads the caller's own user doc to check the admin flag.
+    // `role` is NOT client-writable (see /users rules), so this cannot be forged.
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      // Any signed-in user can read profiles (social / leaderboards).
+      allow read: if isSignedIn();
+
+      // Owner may create their own doc, but must NOT self-assign a role.
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && !('role' in request.resource.data);
+
+      // Owner may update their own data, but `role` is immutable from the client.
+      // Admins are promoted via the Firebase console / a trusted backend, which
+      // bypass these rules. This closes the privilege-escalation hole where any
+      // user could setDoc({ role: 'admin' }) on their own document.
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+
+      // Owner may delete their own account; admins may delete anyone. The owner
+      // check comes first so a self-delete never depends on isAdmin()'s get().
+      allow delete: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    }
+
+    match /spots/{spotId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pushSubscriptions/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /notifications/{notificationId} {
+      // Anyone logged in can read notifications.
+      allow read: if isSignedIn();
+
+      // Only admins create or delete notifications.
+      allow create, delete: if isAdmin();
+
+      // Admins can edit freely. A regular user may ONLY mark-as-read: i.e. add
+      // their OWN uid to `readBy` and change nothing else. This is what
+      // useNotifications.markAsRead / markAllAsRead do.
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+        && request.resource.data.readBy.hasAll(resource.data.readBy)
+        && request.resource.data.readBy.hasOnly(resource.data.readBy.concat([request.auth.uid]))
+      );
+    }
+
+    // Global fallback: deny everything else (MUST be LAST).
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

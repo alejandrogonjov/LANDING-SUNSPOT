@@ -1,0 +1,641 @@
+:root {
+  /* --- Brand Palette --- */
+  /* Fixed hues. These are the brand and do not change between themes — the
+     semantic tokens below are what each theme remaps. */
+  --clr-sunspot-0: #fffcf2;
+  --clr-sunspot-50: #fff9e6;
+  --clr-sunspot-100: #ffecb3;
+  --clr-sunspot-200: #ffd980;
+  --clr-sunspot-300: #ffc04d;
+  --clr-sunspot-400: #f09c38;
+  --clr-sunspot-500: #e07820;
+  /* PRIMARY BASE (Golden Orange) */
+  --clr-sunspot-600: #d65a1a;
+  --clr-sunspot-700: #cc3d14;
+  --clr-sunspot-800: #b3240f;
+  --clr-sunspot-900: #8a1b0b;
+  --clr-sunspot-1000: #611208;
+
+  /* Category colors. Deliberately theme-independent: the same values paint the
+     map markers, and the map tiles stay light in both themes. */
+  --cat-hostelry: var(--clr-sunspot-200);
+  --cat-culture: var(--clr-sunspot-800);
+  --cat-nature: #22c55e;
+  --cat-sport: var(--clr-sunspot-400);
+  --cat-default: var(--clr-grey);
+
+  /* --- Theme: light --- */
+  /* Tells the browser this page paints its own light surfaces, so form
+     controls and scrollbars match — and, on Chromium/Samsung Internet, so the
+     browser's own "force dark" pass leaves the page alone. That auto-inversion
+     is what turned the markers muddy brown on Android before this existed.
+     `only` is load-bearing: a bare `light` still lets Chromium's Auto Dark
+     Theme darken the page, and a user who picks light in /ajustes while their
+     browser forces dark would get the inverted mess back. */
+  color-scheme: only light;
+
+  --clr-primary: var(--clr-sunspot-500);
+  --clr-primary-hover: var(--clr-sunspot-600);
+  --clr-primary-soft: var(--clr-sunspot-50);
+
+  --clr-text: #2D2D2D;
+  --clr-text-muted: #668;
+  --clr-background: var(--clr-sunspot-0);
+  --clr-background-alt: rgba(255, 246, 213, 0.25);
+  --clr-canvas: #f0f0f0;
+
+  /* Elevated surface — cards, sheets, the nav bar. Named for its light value;
+     read it as "surface", since the dark theme remaps it to a dark one. */
+  --clr-white: #ffffff;
+  --clr-border: #e6e6e6;
+  --clr-grey: #b3b3b3;
+  /* Strong text (headings). Inverts with the theme, unlike --clr-on-brand. */
+  --clr-dark: #1A1A1A;
+  /* Text that sits on a brand-orange or image fill, where the backdrop is the
+     same in both themes. Never remapped. */
+  --clr-on-brand: #ffffff;
+  --clr-sunrise: var(--clr-sunspot-400);
+  --clr-sunset: var(--clr-sunspot-800);
+  --clr-free: #22c55e;
+  --clr-paid: #1A1A1A;
+  --clr-shadow: rgba(45, 55, 72, 0.5);
+  --clr-natural-shadow: rgba(6, 78, 59, 0.5);
+  --clr-quiet: #64748b; /* Calm slate grey */
+  --clr-windy: #0ea5e9; /* Breezy sky blue */
+
+  /* Status accents + their tinted fills (badges, alerts, form states) */
+  --clr-success: #0ca678;
+  --clr-success-soft: #e6fcf5;
+  --clr-warn: #f59f00;
+  --clr-warn-soft: #fff9db;
+  --clr-danger: #fa5252;
+  --clr-danger-soft: #fff5f5;
+  --clr-info: #0ea5e9;
+  --clr-info-soft: rgba(14, 165, 233, 0.12);
+  --clr-neutral-soft: #f8f9fa;
+  /* Per-card accents on /cuenta. Not status colours — just distinct hues. */
+  --clr-accent-purple: #8a2be2;
+  --clr-accent-teal: #14b8a6;
+
+  /* Inputs */
+  --clr-input-bg: #fafafa;
+  --clr-input-bg-focus: #ffffff;
+  --clr-input-border: #eeeeee;
+
+  /* Frosted panels (background + blur). The border is the highlight edge. */
+  --clr-glass: rgba(255, 255, 255, 0.6);
+  --clr-glass-strong: rgba(255, 255, 255, 0.92);
+  --clr-glass-border: rgba(255, 255, 255, 0.9);
+
+  /* --- Layout & Spacing --- */
+  /* App content is capped at this width and centered; below it the app fills
+     the screen (mobile is unchanged). Larger screens show the centered band. */
+  --max-width: 768px;
+  /* Map-first pages (Home, Personal Map) share the same cap — the whole app,
+     maps included, stays within a single 768px band on larger screens. */
+  --max-width-wide: 768px;
+  /* Narrower cap for floating chrome (home header, bottom nav) so it stays
+     centered and comfortable even when the map band is wider. */
+  --max-width-chrome: 768px;
+  /* Cap for the home search input. The header spans the full band (menu button
+     far left, avatar far right); the search stays this wide at most. */
+  --max-width-search: 640px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 99px;
+
+  --nav-height: 64px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --total-nav-height: calc(var(--nav-height) + var(--safe-area-bottom));
+
+  /* --- Effects --- */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.1);
+  --shadow-md-up: 0 -10px 40px rgba(0, 0, 0, 0.2);
+  --overlay: rgba(0, 0, 0, 0.4);
+  --transition: 0.2s ease-in-out;
+
+  /* --- Typography --- */
+  --font-main: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Theme: dark --- */
+/* Only the semantic tokens are remapped; the brand and category hues above are
+   shared. `data-theme` is set on <html> before first paint by the bootstrap
+   script in index.html and kept in sync by composables/useTheme.js — there is
+   no `prefers-color-scheme` fallback block because the app is a Vue SPA that
+   renders nothing without JS anyway, and one source of truth beats two. */
+:root[data-theme="dark"] {
+  color-scheme: only dark;
+
+  /* The 500 base is too dim against a dark surface; step one stop lighter. */
+  --clr-primary: var(--clr-sunspot-400);
+  --clr-primary-hover: var(--clr-sunspot-300);
+  --clr-primary-soft: rgba(240, 156, 56, 0.14);
+
+  --clr-text: #e8e4dc;
+  --clr-text-muted: #9a96a8;
+  --clr-background: #17150f;
+  --clr-background-alt: rgba(255, 214, 140, 0.06);
+  --clr-canvas: #0d0c09;
+
+  --clr-white: #211e18;
+  --clr-border: #35302a;
+  --clr-grey: #6f6a61;
+  --clr-dark: #f5f2ea;
+  --clr-sunrise: var(--clr-sunspot-300);
+  /* 800 reads as near-black on a dark surface — 600 keeps the sunset warmth. */
+  --clr-sunset: var(--clr-sunspot-600);
+  --clr-free: #4ade80;
+  --clr-paid: #e8e4dc;
+  --clr-shadow: rgba(148, 163, 184, 0.5);
+  --clr-natural-shadow: rgba(52, 211, 153, 0.5);
+  --clr-quiet: #94a3b8;
+  --clr-windy: #38bdf8;
+
+  --clr-success: #34d399;
+  --clr-success-soft: rgba(52, 211, 153, 0.14);
+  --clr-warn: #fbbf24;
+  --clr-warn-soft: rgba(251, 191, 36, 0.14);
+  --clr-danger: #f87171;
+  --clr-danger-soft: rgba(248, 113, 113, 0.14);
+  --clr-info: #38bdf8;
+  --clr-info-soft: rgba(56, 189, 248, 0.14);
+  --clr-neutral-soft: rgba(255, 255, 255, 0.06);
+  --clr-accent-purple: #b07cf0;
+  --clr-accent-teal: #2dd4bf;
+
+  --clr-input-bg: #1b1914;
+  --clr-input-bg-focus: #211e18;
+  --clr-input-border: #35302a;
+
+  --clr-glass: rgba(33, 30, 24, 0.6);
+  --clr-glass-strong: rgba(33, 30, 24, 0.92);
+  --clr-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Shadows can't darken a dark surface — they need real opacity to read. */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-md-up: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  --overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* --- Global Reset --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+body {
+  margin: 0;
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+  font-family: var(--font-main);
+  background-color: var(--clr-canvas);
+  overscroll-behavior-y: none;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  color: var(--clr-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-main);
+  color: var(--clr-dark);
+  line-height: 1.25;
+  margin: 0;
+}
+
+h1 {
+  font-weight: 800;
+}
+
+h2 {
+  font-weight: 700;
+}
+
+h3 {
+  font-weight: 700;
+}
+
+#app {
+  max-width: var(--max-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--clr-background);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+  overflow-x: hidden;
+}
+
+/* Map-first pages widen the whole app band (nav, headers, sheets follow the
+   token). Toggled by App.vue from the route's `wide` meta. */
+#app.app--wide {
+  --max-width: var(--max-width-wide);
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+img,
+picture,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+}
+
+.sunrise {
+  color: var(--clr-sunrise);
+}
+
+.sunset {
+  color: var(--clr-sunset);
+}
+
+/* Hide scrollbars but allow scrolling */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cross-device Scrollbar Customization */
+/* 1. Standard properties (Firefox & modern standards) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--clr-primary) transparent;
+}
+
+/* 2. Webkit Browsers (Chrome, Safari, Edge, iOS, Android) */
+::-webkit-scrollbar {
+  width: 6px;
+  /* Vertical scrollbar width */
+  height: 6px;
+  /* Horizontal scrollbar height */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  /* Keep it clean, no background track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--clr-primary);
+  border-radius: 20px;
+  /* Makes it a "pill" shape */
+  border: 2px solid transparent;
+  /* Acts as padding if track had color */
+}
+
+/* Optional: Hover effect for desktop users */
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--clr-primary-hover);
+}
+
+/* --- Global Buttons --- */
+.btn-primary,
+.btn-secondary,
+.btn-google,
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.8rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  box-sizing: border-box;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.2s ease,
+    background-image 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-google:active,
+.btn-logout:active {
+  transform: scale(0.97);
+}
+
+/* Primary Button (Premium Solar Gradient & Shadow) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--clr-sunspot-400) 0%, var(--clr-sunspot-500) 100%);
+  color: var(--clr-on-brand);
+  box-shadow: 0 4px 14px rgba(224, 120, 32, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(224, 120, 32, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(224, 120, 32, 0.15);
+}
+
+/* Secondary Button (Warm Solar Cream) */
+.btn-secondary {
+  background-color: var(--clr-primary-soft);
+  color: var(--clr-primary);
+  border: 1px solid rgba(224, 120, 32, 0.25);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(224, 120, 32, 0.12);
+  border-color: var(--clr-primary);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Text Button (Clean text link with canvas hover) */
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.2rem;
+  color: var(--clr-text-muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.btn-text:hover {
+  background-color: var(--clr-primary-soft);
+  color: var(--clr-primary);
+  transform: translateY(-1px);
+}
+
+.btn-text:active {
+  background-color: rgba(224, 120, 32, 0.1);
+  transform: translateY(0) scale(0.96);
+}
+
+/* Google Button (Clean white card style) */
+.btn-google {
+  background-color: var(--clr-white);
+  color: var(--clr-text);
+  border: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-google:hover {
+  border-color: var(--clr-grey);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn-google:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-google svg {
+  font-size: 1.2rem;
+}
+
+/* Logout Button (Premium soft red styled action) */
+.btn-logout svg {
+  font-size: 1.25rem;
+}
+
+/* --- Global Unified Close & Back Buttons Design System --- */
+.btn-close,
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--clr-border);
+  background-color: var(--clr-white);
+  color: var(--clr-dark);
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  padding: 0;
+  box-shadow: var(--shadow-sm);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-close:hover,
+.btn-back:hover {
+  background-color: var(--clr-background-alt);
+  color: var(--clr-primary);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(224, 120, 32, 0.2);
+}
+
+.btn-close:active,
+.btn-back:active {
+  transform: translateY(0) scale(0.92);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Glassmorphic/Overlay variation for media headers (e.g. SpotHero, banners) */
+.btn-close.btn-glass,
+.btn-back.btn-glass {
+  background: var(--clr-glass-strong);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--clr-glass-border);
+  color: var(--clr-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-close.btn-glass:hover,
+.btn-back.btn-glass:hover {
+  background: var(--clr-white);
+  color: var(--clr-primary);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.btn-close.btn-glass:active,
+.btn-back.btn-glass:active {
+  transform: translateY(0) scale(0.92);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Optical centering for chevron-left icon */
+.btn-back svg {
+  margin-right: 2px;
+}
+
+/* --- Global Unified Recommendation Box System --- */
+.recommendation-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--clr-canvas);
+  border-left: 4px solid;
+  text-align: left;
+}
+
+.uv-risk {
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.personalized-tip {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--clr-text);
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+/* --- Global Unified Bottom Sheet Design System --- */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.bottom-sheet {
+  position: relative;
+  background: var(--clr-white);
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  border-radius: 32px 32px 0 0;
+  box-shadow: var(--shadow-md-up);
+  display: flex;
+  flex-direction: column;
+  max-height: 90dvh;
+  overflow: hidden;
+  padding-bottom: calc(1.5rem + var(--safe-area-bottom));
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: var(--clr-border);
+  border-radius: var(--radius-full);
+  margin: 12px auto;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.sheet-content {
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.sheet-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--clr-dark);
+  margin: 0;
+}
+
+.sheet-subtitle {
+  color: var(--clr-text-muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
