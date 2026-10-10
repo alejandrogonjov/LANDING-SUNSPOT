@@ -40,9 +40,11 @@ import UVIntensityWheel from '@/components/spot/UVIntensityWheel.vue'
 import DVitamin from '@/components/spot/DVitamin.vue'
 import SpotLocationAction from '@/components/spot/SpotLocationAction.vue'
 import SolarInterval from '@/components/spot/SolarInterval.vue'
+import { useToast } from '@/composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
+const { triggerToast } = useToast()
 
 const spot = ref(null)
 const loading = ref(true)
@@ -70,16 +72,22 @@ const handleShare = async () => {
       url: window.location.href
     })
   } catch (err) {
+    // No Web Share API (most desktop browsers) or it failed: copy the link
+    // instead and confirm with the app's toast rather than a blocking alert().
     if (err.name !== 'AbortError') {
-      navigator.clipboard.writeText(window.location.href)
-      alert('Enlace copiado')
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        triggerToast('Enlace copiado')
+      } catch {
+        triggerToast('No se ha podido copiar el enlace')
+      }
     }
   }
 }
 
 onMounted(() => {
   const spotId = route.params.id
-  if (!spotId) return router.push('/explore')
+  if (!spotId) return router.push('/explorar')
 
   const docRef = doc(db, 'spots', spotId)
   unsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -115,6 +123,47 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+}
+
+/* --- Desktop ---
+   DOM order is the mobile reading order and stays untouched; the grid only
+   places it: the description on top, the exposure wheel next to the vitamin D
+   / tanning cards it drives, then the solar interval and the maps link. */
+@media (min-width: 1024px) {
+  .spot-detail {
+    padding: 1.5rem 1.5rem 3rem;
+  }
+
+  .content-body {
+    margin-top: 0;
+    padding: 2rem 0 0;
+    border-radius: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 2.5rem 3rem;
+  }
+
+  .content-body > * {
+    grid-column: 1 / -1;
+  }
+
+  /* Comfortable line length for the description. */
+  .content-body > .spot-info {
+    max-width: 820px;
+  }
+
+  .content-body > .uv-card {
+    grid-column: 1;
+  }
+
+  .content-body > .expand-wrapper {
+    grid-column: 2;
+  }
+
+  .content-body > .location-action-container {
+    width: min(100%, 420px);
+  }
 }
 
 .loading-state,

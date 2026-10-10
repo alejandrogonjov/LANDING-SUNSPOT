@@ -1,6 +1,8 @@
 <template>
   <div class="hero-media-container">
-    <div class="image-slider no-scrollbar" ref="slider" @scroll="handleScroll">
+    <div class="image-slider no-scrollbar" ref="slider" @scroll="handleScroll"
+      :tabindex="spot?.images?.length > 1 ? 0 : undefined" aria-label="Galería de imágenes"
+      @keydown.left.prevent="goTo(currentIndex - 1)" @keydown.right.prevent="goTo(currentIndex + 1)">
       <div v-for="(img, index) in spot?.images || []" :key="index" class="slide">
         <img :src="getOptimizedImageUrl(img, 1000)" :alt="`${spot?.name || 'Spot'} - ${index + 1}`" class="hero-img" :loading="index === 0 ? 'eager' : 'lazy'" />
       </div>
@@ -9,6 +11,19 @@
         <img src="/sunspot-skyline.svg" class="hero-img" alt="No disponible" />
       </div>
     </div>
+
+    <!-- Mouse / keyboard alternative to swiping. Shown only on devices with a
+         fine pointer (see styles), so touch phones look exactly as before. -->
+    <template v-if="spot?.images?.length > 1">
+      <button type="button" class="btn-close btn-glass slide-nav prev" :disabled="currentIndex === 0"
+        aria-label="Imagen anterior" @click="goTo(currentIndex - 1)">
+        <icon-mdi-chevron-left />
+      </button>
+      <button type="button" class="btn-close btn-glass slide-nav next"
+        :disabled="currentIndex >= spot.images.length - 1" aria-label="Imagen siguiente" @click="goTo(currentIndex + 1)">
+        <icon-mdi-chevron-right />
+      </button>
+    </template>
 
     <div v-if="spot?.images?.length > 1" class="image-counter">
       {{ currentIndex + 1 }} / {{ spot.images.length }}
@@ -49,6 +64,7 @@ const router = useRouter()
 
 const isLiked = ref(false)
 const currentIndex = ref(0)
+const slider = ref(null)
 
 // Check if this spot is already in the user's bookmarks on load
 const checkBookmarkStatus = async () => {
@@ -73,9 +89,9 @@ watch(() => props.spot, (newSpot) => {
 const toggleLike = async () => {
   const user = await getCurrentUser()
 
-  // 1. Redirect if not logged in
+  // 1. Redirect if not logged in (`/login` is not a route; the auth page is /registro)
   if (!user) {
-    router.push('/login')
+    router.push('/registro')
     return
   }
 
@@ -102,6 +118,13 @@ const toggleLike = async () => {
     // Rollback UI if DB update fails
     isLiked.value = previousState
   }
+}
+
+const goTo = (index) => {
+  const el = slider.value
+  const count = props.spot?.images?.length || 0
+  if (!el || index < 0 || index >= count) return
+  el.scrollTo({ left: index * el.offsetWidth, behavior: 'smooth' })
 }
 
 const handleScroll = (event) => {
@@ -196,6 +219,58 @@ const handleScroll = (event) => {
 }
 
 /* Redundant .floating-btn styles removed - now using unified global styles */
+
+.slide-nav {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+}
+
+.slide-nav.prev {
+  left: 1.25rem;
+}
+
+.slide-nav.next {
+  right: 1.25rem;
+}
+
+.slide-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .slide-nav {
+    display: inline-flex;
+  }
+
+  .slide-nav:hover {
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  .slide-nav:active {
+    transform: translateY(-50%) scale(0.94);
+  }
+}
+
+/* Desktop: a framed, taller gallery inside the wide content column. */
+@media (min-width: 1024px) {
+  .hero-media-container {
+    height: clamp(320px, 42vh, 460px);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .hero-top-bar {
+    top: 1rem;
+  }
+
+  .image-counter {
+    bottom: 1.25rem;
+  }
+}
 .like-btn.is-liked {
   color: var(--clr-primary) !important;
 }

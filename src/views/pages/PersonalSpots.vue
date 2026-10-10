@@ -283,12 +283,19 @@ function closeMenu(e) {
   }
 }
 
+// Keyboard: Escape closes the options menu too.
+function closeMenuOnEscape(e) {
+  if (e.key === 'Escape') activeMenuId.value = null
+}
+
 onMounted(() => {
   document.addEventListener('click', closeMenu)
+  document.addEventListener('keydown', closeMenuOnEscape)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', closeMenu)
+  document.removeEventListener('keydown', closeMenuOnEscape)
 })
 
 // Delete state
@@ -1111,5 +1118,24 @@ function handleDelete() {
 .fab-leave-to {
   opacity: 0;
   transform: scale(0) rotate(180deg);
+}
+
+/* Desktop: wide column with the spots in a grid. The FAB anchors to the
+   viewport corner — the content column is no longer a centred 768px band. */
+@media (min-width: 1024px) {
+  .personal-spots-page {
+    padding: 1rem 1.5rem 6rem;
+  }
+
+  .spots-feed {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .fab {
+    right: 2rem;
+    bottom: 2rem;
+  }
 }
 </style>

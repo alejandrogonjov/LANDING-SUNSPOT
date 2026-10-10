@@ -26,7 +26,7 @@ export function useToast() {
     triggerToast(
       'Acceso a la ubicación denegado. Puedes cambiar esto en Ajustes.',
       'Ajustes',
-      '/settings'
+      '/ajustes'
     )
   }
 

@@ -144,7 +144,16 @@
 
         <!-- Desktop (shows both) -->
         <div v-else class="desktop-view">
-          <p class="description">Visita esta página desde tu móvil para instalar la app.</p>
+          <!-- Chromium desktop browsers (Chrome, Edge…) can install the PWA on
+               the computer itself; offer it when the browser says it can. -->
+          <template v-if="canInstall">
+            <p class="description">Instala SUNspot en este ordenador para abrirla como una aplicación más.</p>
+            <button class="btn-primary full-width install-btn" @click="handleInstall">
+              Instalar en este ordenador
+            </button>
+            <p class="description">O instálala en tu móvil:</p>
+          </template>
+          <p v-else class="description">Visita esta página desde tu móvil para instalar la app.</p>
 
           <div class="instruction-card">
             <IconAndroid class="os-icon android" />

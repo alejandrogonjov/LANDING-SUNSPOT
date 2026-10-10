@@ -243,4 +243,19 @@ watch(() => userData.value?.bookmarks, (newIds) => {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Desktop: wide column, cards in a grid. */
+@media (min-width: 1024px) {
+  .bookmarks-page {
+    width: 100%;
+    max-width: none;
+    padding: 1rem 1.5rem 3rem;
+  }
+
+  .bookmarks-feed {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem;
+  }
+}
 </style>

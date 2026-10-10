@@ -3,79 +3,85 @@
     <AccountHeader :user="userData" />
 
     <main class="account-main">
-      <NotificationSection />
+      <!-- Two columns on desktop: content | actions. Both wrappers are
+           `display: contents` on mobile, so the single column is unchanged. -->
+      <div class="account-col account-content">
+        <NotificationSection />
 
-      <ProfileSuggestions v-if="userData?.profile?.type" :profile-type="userData.profile.type"
-        :suggestions="suggestedSpots" :is-loading="isSuggestionsLoading" />
+        <ProfileSuggestions v-if="userData?.profile?.type" :profile-type="userData.profile.type"
+          :suggestions="suggestedSpots" :is-loading="isSuggestionsLoading" />
 
-      <BookmarkedSpots :spots="bookmarkedSpots" :is-loading="isBookmarksLoading" />
-
-      <div class="action-section">
-        <button class="action-card" @click="showSpotSheet = true">
-          <div class="icon-circle">
-            <icon-mdi-map-marker-plus-outline class="btn-icon" />
-          </div>
-          <div class="btn-content">
-            <span class="btn-title">¿Sugerir un spot al equipo?</span>
-            <span class="btn-sub">Envíanos un nuevo spot solar que conozcas</span>
-          </div>
-          <icon-mdi-chevron-right class="chevron" />
-        </button>
-
-        <button class="action-card ambassador-card" @click="showAmbassadorModal = true">
-          <div class="icon-circle star">
-            <icon-mdi-star-outline class="btn-icon" />
-          </div>
-          <div class="btn-content">
-            <span class="btn-title">Conviértete en Embajador</span>
-            <span class="btn-sub">Valida los mejores spots de la ciudad</span>
-          </div>
-          <icon-mdi-chevron-right class="chevron" />
-        </button>
-
-        <!-- Reachable whether the user answered, skipped, or was never asked:
-             the questionnaire is only *prompted* once, never locked away. -->
-        <router-link to="/bienvenida" class="action-card quiz-card">
-          <div class="icon-circle quiz">
-            <icon-mdi-clipboard-text-outline class="btn-icon" />
-          </div>
-          <div class="btn-content">
-            <span class="btn-title">{{ isCompleted ? 'Repetir cuestionario' : 'Responder cuestionario' }}</span>
-            <span class="btn-sub">{{ quizHint }}</span>
-          </div>
-          <icon-mdi-chevron-right class="chevron" />
-        </router-link>
-
-        <router-link to="/ajustes" class="action-card settings-card">
-          <div class="icon-circle settings">
-            <icon-mdi-cog-outline class="btn-icon" />
-          </div>
-          <div class="btn-content">
-            <span class="btn-title">Ajustes de cuenta</span>
-            <span class="btn-sub">Gestiona tu perfil, avatar y preferencias</span>
-          </div>
-          <icon-mdi-chevron-right class="chevron" />
-        </router-link>
-
-        <router-link to="/personal-spots" class="action-card personal-card">
-          <div class="icon-circle personal">
-            <icon-mdi-map-marker-multiple-outline class="btn-icon" />
-          </div>
-          <div class="btn-content">
-            <span class="btn-title">Mis Spots Personales</span>
-            <span class="btn-sub">Crea y gestiona tus rincones de sol</span>
-          </div>
-          <icon-mdi-chevron-right class="chevron" />
-        </router-link>
+        <BookmarkedSpots :spots="bookmarkedSpots" :is-loading="isBookmarksLoading" />
       </div>
 
-      <ApplySpotSheet v-if="showSpotSheet" @close="showSpotSheet = false" />
-      <AmbassadorModal v-if="showAmbassadorModal" @close="showAmbassadorModal = false" />
+      <div class="account-col account-actions">
+        <div class="action-section">
+          <button class="action-card" @click="showSpotSheet = true">
+            <div class="icon-circle">
+              <icon-mdi-map-marker-plus-outline class="btn-icon" />
+            </div>
+            <div class="btn-content">
+              <span class="btn-title">¿Sugerir un spot al equipo?</span>
+              <span class="btn-sub">Envíanos un nuevo spot solar que conozcas</span>
+            </div>
+            <icon-mdi-chevron-right class="chevron" />
+          </button>
 
-      <button @click="handleLogout" class="btn-logout" style="margin-top: 1rem;">
-        <icon-mdi-logout />
-        <span>Cerrar Sesión</span>
-      </button>
+          <button class="action-card ambassador-card" @click="showAmbassadorModal = true">
+            <div class="icon-circle star">
+              <icon-mdi-star-outline class="btn-icon" />
+            </div>
+            <div class="btn-content">
+              <span class="btn-title">Conviértete en Embajador</span>
+              <span class="btn-sub">Valida los mejores spots de la ciudad</span>
+            </div>
+            <icon-mdi-chevron-right class="chevron" />
+          </button>
+
+          <!-- Reachable whether the user answered, skipped, or was never asked:
+               the questionnaire is only *prompted* once, never locked away. -->
+          <router-link to="/bienvenida" class="action-card quiz-card">
+            <div class="icon-circle quiz">
+              <icon-mdi-clipboard-text-outline class="btn-icon" />
+            </div>
+            <div class="btn-content">
+              <span class="btn-title">{{ isCompleted ? 'Repetir cuestionario' : 'Responder cuestionario' }}</span>
+              <span class="btn-sub">{{ quizHint }}</span>
+            </div>
+            <icon-mdi-chevron-right class="chevron" />
+          </router-link>
+
+          <router-link to="/ajustes" class="action-card settings-card">
+            <div class="icon-circle settings">
+              <icon-mdi-cog-outline class="btn-icon" />
+            </div>
+            <div class="btn-content">
+              <span class="btn-title">Ajustes de cuenta</span>
+              <span class="btn-sub">Gestiona tu perfil, avatar y preferencias</span>
+            </div>
+            <icon-mdi-chevron-right class="chevron" />
+          </router-link>
+
+          <router-link to="/personal-spots" class="action-card personal-card">
+            <div class="icon-circle personal">
+              <icon-mdi-map-marker-multiple-outline class="btn-icon" />
+            </div>
+            <div class="btn-content">
+              <span class="btn-title">Mis Spots Personales</span>
+              <span class="btn-sub">Crea y gestiona tus rincones de sol</span>
+            </div>
+            <icon-mdi-chevron-right class="chevron" />
+          </router-link>
+        </div>
+
+        <ApplySpotSheet v-if="showSpotSheet" @close="showSpotSheet = false" />
+        <AmbassadorModal v-if="showAmbassadorModal" @close="showAmbassadorModal = false" />
+
+        <button @click="handleLogout" class="btn-logout" style="margin-top: 1rem;">
+          <icon-mdi-logout />
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
     </main>
   </MainLayout>
 </template>
@@ -218,6 +224,10 @@ watch(() => userData.value?.profile?.type, (newType) => {
 </script>
 
 <style scoped>
+.account-col {
+  display: contents;
+}
+
 .account-main {
   padding: 1.5rem 1.5rem calc(var(--total-nav-height) + 2rem);
   display: flex;
@@ -394,5 +404,29 @@ watch(() => userData.value?.profile?.type, (newType) => {
 
 .action-card.personal-card:hover .chevron {
   color: var(--clr-accent-teal);
+}
+
+/* --- Desktop: content | actions --- */
+@media (min-width: 1024px) {
+  .account-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    align-items: start;
+    gap: 2.5rem;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .account-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    min-width: 0;
+  }
+
+  .account-actions {
+    position: sticky;
+    top: 1.5rem;
+    gap: 1rem;
+  }
 }
 </style>

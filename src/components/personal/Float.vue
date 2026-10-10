@@ -289,6 +289,14 @@ const vClickOutside = {
     width: 1.3rem;
     height: 1.3rem;
 }
+
+/* Desktop: the map spans the whole content area; keep the search at the same
+   comfortable width as the home search instead of stretching edge to edge. */
+@media (min-width: 1024px) {
+    .search-container {
+        max-width: var(--max-width-search);
+    }
+}
 </style>
 
 <!-- Global: teleported dropdown -->

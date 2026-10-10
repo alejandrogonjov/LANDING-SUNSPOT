@@ -695,4 +695,32 @@ const goToEditNotif = (id) => {
 .export-done {
   color: var(--clr-text-muted);
 }
+
+/* Desktop: summary, export and notifications on the left; the spot list —
+   the long one — takes the wider right column. */
+@media (min-width: 1024px) {
+  .admin-dashboard {
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    gap: 1.75rem 2.5rem;
+    padding: 1rem 1.5rem 3rem;
+  }
+
+  .admin-dashboard > section {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .admin-dashboard > .spots-management {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  .spots-management .spots-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
 </style>

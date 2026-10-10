@@ -34,7 +34,7 @@
           <div class="empty-card">
             <icon-mdi-map-marker-off-outline class="empty-icon" />
             <p>Tus spots aparecerán aquí cuando les añadas ubicación.</p>
-            <router-link to="/personal-spot" class="btn-primary">
+            <router-link to="/personal-spots" class="btn-primary">
               <icon-mdi-format-list-bulleted />
               Ir a Mis Spots
             </router-link>
@@ -128,7 +128,7 @@ const flyToSpot = (spot) => {
 const locateUser = () => {
   if (!map) return
   if (!geolocationEnabled.value) {
-    triggerToast("La geolocalización está desactivada en Ajustes", "Ajustes", "/settings")
+    triggerToast("La geolocalización está desactivada en Ajustes", "Ajustes", "/ajustes")
     return
   }
   if (!userLocation.value) {
@@ -573,5 +573,15 @@ onBeforeUnmount(() => {
 .slide-up-enter-from .personal-sheet,
 .slide-up-leave-to .personal-sheet {
   transform: translateY(100%);
+}
+
+/* Desktop: the spot sheet opens as a centred dialog, like every other sheet
+   (style.css › Desktop); this page's own overlay rule would pin it low. */
+@media (min-width: 1024px) {
+  .sheet-overlay {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
 }
 </style>

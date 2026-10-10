@@ -1,35 +1,52 @@
 <template>
   <DefaultLayout>
     <div id="explore-page">
-      <header class="explore-header">
+      <header v-if="!isDesktop" class="explore-header">
         <button @click="showFilters = true" class="filter-btn" :class="{ 'has-filters': hasActiveFilters }"
           aria-label="Filtros">
           <icon-mdi-tune />
         </button>
       </header>
 
-      <div class="spots-list">
-        <div v-if="loading" class="loading-state">
-          <div class="sun-loader"></div>
-          <p>Buscando rincones con sol...</p>
-        </div>
-
-        <template v-else-if="filteredSpots.length > 0">
-          <SpotCard v-for="spot in pagedSpots" :key="spot.id" :spot="spot" :user-location="userLocation" />
-          <div v-if="hasMore" ref="sentinel" class="load-more">
-            <div class="sun-loader"></div>
+      <div class="explore-body">
+        <!-- Desktop: the same filter controls as the mobile sheet, always visible. -->
+        <aside v-if="isDesktop" class="filters-panel" :aria-label="t('ui.filters')">
+          <div class="filters-panel-header">
+            <h2 class="filters-title">{{ t('ui.filters') }}</h2>
+            <button v-if="hasActiveFilters" type="button" class="btn-text filters-clear" @click="clearFilters">
+              {{ t('ui.clear') }}
+            </button>
           </div>
-        </template>
+          <ExploreFilterControls :filters="filters" @update:filters="val => Object.assign(filters, val)" />
+        </aside>
 
-        <div v-else class="empty-state">
-          <div class="empty-icon">☁️</div>
-          <h3>No hay resultados</h3>
-          <p>Prueba a ajustar tus filtros</p>
-          <button @click="clearFilters" class="reset-link">Limpiar filtros</button>
+        <div class="spots-list">
+          <p v-if="isDesktop && !loading" class="results-count" role="status">
+            {{ filteredSpots.length }} {{ filteredSpots.length === 1 ? t('map.spot') : t('map.spots') }}
+          </p>
+
+          <div v-if="loading" class="loading-state">
+            <div class="sun-loader"></div>
+            <p>Buscando rincones con sol...</p>
+          </div>
+
+          <template v-else-if="filteredSpots.length > 0">
+            <SpotCard v-for="spot in pagedSpots" :key="spot.id" :spot="spot" :user-location="userLocation" />
+            <div v-if="hasMore" ref="sentinel" class="load-more">
+              <div class="sun-loader"></div>
+            </div>
+          </template>
+
+          <div v-else class="empty-state">
+            <div class="empty-icon">☁️</div>
+            <h3>No hay resultados</h3>
+            <p>Prueba a ajustar tus filtros</p>
+            <button @click="clearFilters" class="reset-link">Limpiar filtros</button>
+          </div>
         </div>
       </div>
 
-      <ExploreFilters :show="showFilters" :filters="filters" @close="showFilters = false" @clear="clearFilters"
+      <ExploreFilters :show="showFilters && !isDesktop" :filters="filters" @close="showFilters = false" @clear="clearFilters"
         @update:filters="val => Object.assign(filters, val)" />
     </div>
   </DefaultLayout>
@@ -40,6 +57,9 @@ import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } 
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import SpotCard from '@/components/explore/SpotCard.vue' // New Component
 import ExploreFilters from '@/components/explore/ExploreFilters.vue'
+import ExploreFilterControls from '@/components/explore/ExploreFilterControls.vue'
+import { useViewport } from '@/composables/useViewport'
+import { useTranslator } from '@/composables/useTranslator'
 import { db } from '@/firebase'
 import { collection, onSnapshot, query } from 'firebase/firestore'
 import { useSettings } from '@/composables/useSettings'
@@ -59,6 +79,8 @@ const sentinel = ref(null)
 let observer = null
 
 const { geolocationEnabled } = useSettings()
+const { isDesktop } = useViewport()
+const { t } = useTranslator()
 const { triggerLocationDeniedToast } = useToast()
 
 const filters = reactive({
@@ -226,6 +248,96 @@ onBeforeUnmount(() => {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* --- Desktop: filters panel | card grid --- */
+.explore-body {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .explore-body {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    align-items: start;
+    gap: 2rem;
+    padding: 0 1.5rem 3rem;
+  }
+
+  .filters-panel {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: var(--clr-white);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .filters-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .filters-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+  }
+
+  .filters-clear {
+    padding: 0.35rem 0.75rem;
+  }
+
+  .filters-panel :deep(.filter-group) {
+    margin-bottom: 1.5rem;
+  }
+
+  .filters-panel :deep(.filter-group:last-child) {
+    margin-bottom: 0;
+  }
+
+  .filters-panel :deep(.filter-group label) {
+    font-size: 0.75rem;
+  }
+
+  /* Denser controls so the labels fit the panel on one line. */
+  .filters-panel :deep(.type-btn),
+  .filters-panel :deep(.sun-filter-btn) {
+    padding: 0.65rem 0.5rem;
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+
+  .filters-panel :deep(.pill-btn) {
+    padding: 0.5rem 0.85rem;
+  }
+
+  .spots-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+    padding: 0;
+  }
+
+  .results-count,
+  .loading-state,
+  .empty-state,
+  .load-more {
+    grid-column: 1 / -1;
+  }
+
+  .results-count {
+    margin-bottom: -0.5rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--clr-text-muted);
   }
 }
 

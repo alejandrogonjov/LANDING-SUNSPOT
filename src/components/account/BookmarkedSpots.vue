@@ -222,4 +222,23 @@ defineProps({
   background: var(--clr-primary);
   color: var(--clr-white);
 }
+
+/* Desktop: the collection fits on screen, so show it as a grid instead of a
+   horizontal swipe strip. */
+@media (min-width: 1024px) {
+  .horizontal-scroll {
+    margin: 0;
+    padding: 0.25rem 0 0;
+    overflow: visible;
+  }
+
+  .scroll-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+
+  .card-image {
+    height: 120px;
+  }
+}
 </style>

@@ -234,4 +234,28 @@ const openAmbassador = (amb) => {
 .fade-list-leave-active {
   position: absolute;
 }
+
+/* Desktop: wide column, ambassadors in a grid under the category filter. */
+@media (min-width: 1024px) {
+  .ambassadors-page {
+    padding: 1rem 0 3rem;
+  }
+
+  /* Auto margins inside the flex <main> would shrink-wrap it otherwise. */
+  .container {
+    width: 100%;
+    max-width: none;
+  }
+
+  .ambassadors-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-content: start;
+    gap: 1.25rem;
+  }
+
+  .ambassadors-list .empty-state {
+    grid-column: 1 / -1;
+  }
+}
 </style>

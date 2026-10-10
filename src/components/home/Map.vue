@@ -171,7 +171,7 @@ const flyToSpot = (spot) => {
 const locateUser = () => {
   if (!map) return
   if (!geolocationEnabled.value) {
-    triggerToast("La geolocalización está desactivada en Ajustes", "Ajustes", "/settings")
+    triggerToast("La geolocalización está desactivada en Ajustes", "Ajustes", "/ajustes")
     return
   }
   if (!userLocation.value) {

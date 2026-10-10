@@ -45,4 +45,15 @@ h1 {
   font-size: 1.25rem;
   margin: 0;
 }
+
+/* Desktop: a page header rather than a compact app bar. */
+@media (min-width: 1024px) {
+  .back-wrapper {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+}
 </style>
