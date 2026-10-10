@@ -30,7 +30,7 @@ loadFirebase().then(({ auth, onAuthStateChanged }) => {
       inflight = null
     }
   })
-})
+}).catch(() => { /* Firebase unavailable — logged in firebaseLazy.js */ })
 
 /**
  * Reads the onboarding payload for a user, once per session. The router guard

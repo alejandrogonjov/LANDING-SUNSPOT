@@ -16,6 +16,12 @@
  */
 export const MAP_STYLE_URL = `https://api.jawg.io/styles/jawg-terrain.json?access-token=${import.meta.env.VITE_JAWG_MAPS_TOKEN}`
 
+// Without the token the style request is rejected and both maps show only
+// their background. Name the cause for whoever is looking at the console.
+if (!import.meta.env.VITE_JAWG_MAPS_TOKEN) {
+  console.error('[SUNspot] Falta VITE_JAWG_MAPS_TOKEN: el mapa no puede cargar su estilo ni sus teselas. Ver docs/dev/environment.md.')
+}
+
 /** Valencia city centre — the view used until we know anything better. */
 export const DEFAULT_VIEW = { lat: 39.4699, lng: -0.3763, zoom: 15 }
 

@@ -18,11 +18,39 @@
  * resolve to the same module instance either way.
  */
 
+import { ref, readonly } from 'vue'
+
 let pending
+
+// 'idle' → 'ready' | 'unavailable'. 'unavailable' means the Firebase module
+// could not be loaded or initialised — in practice a deploy built without the
+// VITE_FIREBASE_* variables (firebase.js throws a message naming them), or the
+// chunk failing to download. App.vue shows a banner for it, and the router
+// lets public pages through instead of aborting every navigation.
+const status = ref('idle')
 
 /**
  * @returns {Promise} the module: `auth`, `db`, `getCurrentUser`, plus the
  *   Firestore/Auth functions re-exported from firebase.js. Cached, so repeat
- *   calls are free and the chunk is fetched once.
+ *   calls are free and the chunk is fetched once. A failure is not cached, so
+ *   a transient download error can recover on the next call.
  */
-export const loadFirebase = () => (pending ??= import('@/firebase'))
+export const loadFirebase = () => (pending ??= import('@/firebase').then(
+  (mod) => {
+    status.value = 'ready'
+    return mod
+  },
+  (error) => {
+    if (status.value !== 'unavailable') {
+      console.error('[SUNspot] Firebase no está disponible:', error?.message || error)
+    }
+    status.value = 'unavailable'
+    pending = undefined
+    throw error
+  }
+))
+
+/** Resolves to the Firebase module, or `null` when it can't be loaded. */
+export const loadFirebaseOrNull = () => loadFirebase().catch(() => null)
+
+export const firebaseStatus = readonly(status)

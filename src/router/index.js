@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/pages/Home.vue'
-import { loadFirebase } from '@/firebaseLazy'
+import { loadFirebase, loadFirebaseOrNull } from '@/firebaseLazy'
 import { hasAnsweredOnboarding, wasPromptedThisSession, markPromptedThisSession } from '@/composables/useOnboarding'
 import { readAuthSnapshot, resetAuthSnapshot } from '@/utils/authCache'
+import { useToast } from '@/composables/useToast'
 
 const routes = [
   {
@@ -178,7 +179,10 @@ const router = createRouter({
  * loads, this does nothing visible.
  */
 const verifyNavigation = async (to) => {
-  const { auth } = await loadFirebase()
+  // Nothing to verify against when Firebase can't load (see the guard below).
+  const firebase = await loadFirebaseOrNull()
+  if (!firebase) return
+  const { auth } = firebase
   await auth.authStateReady()
   const currentUser = auth.currentUser
 
@@ -247,7 +251,18 @@ router.beforeEach(async (to, from, next) => {
   // confirmed finished onboarding. Wait for the real answer — which now means
   // waiting for Firebase to load as well. That's the point: the fast path
   // above never touches Firebase at all, so it isn't in the entry graph.
-  const { auth } = await loadFirebase()
+  const firebase = await loadFirebaseOrNull()
+
+  if (!firebase) {
+    // Firebase could not load (a deploy without its VITE_FIREBASE_* variables,
+    // or the chunk failed to download). Rejecting here used to abort *every*
+    // navigation: the page looked fine but no link or button went anywhere.
+    // Nobody can be verified, so keep protected routes closed and let public
+    // ones through; App.vue tells the user the data service is unavailable.
+    return (requiresAuth || requiresAdmin) ? next({ name: 'home' }) : next()
+  }
+
+  const { auth } = firebase
   await auth.authStateReady()
   const currentUser = auth.currentUser
 
@@ -289,6 +304,32 @@ router.beforeEach(async (to, from, next) => {
   }
 
   next() // Default: Proceed
+})
+
+// A lazy route whose chunk can't be loaded. After a new deploy, a tab opened on
+// the previous one asks for chunk hashes that no longer exist; the navigation
+// fails and, without this, the click simply does nothing. Reload once into the
+// target URL to pick up the new build (guarded so a real outage can't loop).
+const CHUNK_ERROR = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i
+const RELOAD_KEY = 'sunspot_chunk_reload'
+
+router.onError((error, to) => {
+  if (!CHUNK_ERROR.test(error?.message || '')) {
+    // e.g. a page that needs Firebase on a deploy without its configuration.
+    // Say so instead of leaving the click without any response.
+    console.error('Navigation error:', error)
+    useToast().triggerToast('No se ha podido abrir esta sección. Inténtalo de nuevo más tarde.')
+    return
+  }
+  try {
+    if (sessionStorage.getItem(RELOAD_KEY) === to.fullPath) return
+    sessionStorage.setItem(RELOAD_KEY, to.fullPath)
+  } catch { /* storage blocked — reload anyway, once per page life */ }
+  window.location.assign(to.fullPath)
+})
+
+router.afterEach(() => {
+  try { sessionStorage.removeItem(RELOAD_KEY) } catch { /* ignore */ }
 })
 
 export default router

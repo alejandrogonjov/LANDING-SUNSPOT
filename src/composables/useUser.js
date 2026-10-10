@@ -68,6 +68,11 @@ loadFirebase().then(({ auth, db, onAuthStateChanged, doc, onSnapshot }) => {
       loading.value = false
     })
   })
+}).catch(() => {
+  // Firebase unavailable (see firebaseLazy.js, which logs why). Settle the
+  // state instead of leaving `loading` on forever.
+  authResolved.value = true
+  loading.value = false
 })
 
 export function useUser() {

@@ -33,6 +33,10 @@ export function useTranslator() {
     solar: {
       computing: 'Calculando sombras…',
     },
+    // App.vue banner when Firebase can't load
+    service: {
+      unavailable: 'No podemos conectar con SUNspot ahora mismo: los spots y tu cuenta no están disponibles.',
+    },
     // Desktop chrome (DesktopSidebar.vue)
     nav: {
       discover: 'Descubre',
@@ -64,6 +68,7 @@ export function useTranslator() {
       sun_today: 'Sol directo hoy',
       zoom_in: 'Acercar',
       zoom_out: 'Alejar',
+      base_error: 'No se ha podido cargar el mapa base. Los spots siguen disponibles.',
     },
   }
 

@@ -14,6 +14,23 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 }
 
+// A build without these variables used to fail deep inside the SDK with an
+// opaque `auth/invalid-api-key`. Name what is missing instead: this is what a
+// deploy whose host has no VITE_FIREBASE_* variables runs into.
+const REQUIRED = {
+  VITE_FIREBASE_API_KEY: firebaseConfig.apiKey,
+  VITE_FIREBASE_AUTH_DOMAIN: firebaseConfig.authDomain,
+  VITE_FIREBASE_PROJECT_ID: firebaseConfig.projectId,
+  VITE_FIREBASE_APP_ID: firebaseConfig.appId,
+}
+const missing = Object.entries(REQUIRED).filter(([, value]) => !value).map(([name]) => name)
+if (missing.length) {
+  throw new Error(
+    `Firebase sin configurar: faltan ${missing.join(', ')}. Añádelas a las variables de entorno ` +
+    'del hosting (o a .env en local) y vuelve a compilar — ver docs/dev/environment.md.'
+  )
+}
+
 const firebaseApp = initializeApp(firebaseConfig)
 
 const auth = getAuth(firebaseApp)

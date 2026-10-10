@@ -9,6 +9,11 @@
 
       <div ref="mapContainer" class="leaflet-map-element"></div>
 
+      <div v-if="mapBaseError" class="map-base-error" role="status">
+        <icon-mdi-map-marker-alert-outline aria-hidden="true" />
+        <span>{{ t('map.base_error') }}</span>
+      </div>
+
       <!-- Floating header -->
       <PersonalFloat @select-spot="flyToSpot" />
 
@@ -64,12 +69,14 @@ import PersonalSpotBottomSheet from '@/components/personal/PersonalSpotBottomShe
 import { usePersonalSpots } from '@/composables/usePersonalSpots'
 import { useSettings } from '@/composables/useSettings'
 import { useToast } from '@/composables/useToast'
+import { useTranslator } from '@/composables/useTranslator'
 import { calculateDistance } from '@/utils/geo'
 import { MAP_STYLE_URL, loadLastView, saveLastView } from '@/utils/map'
 
 const { spots } = usePersonalSpots()
 const { geolocationEnabled } = useSettings()
 const { triggerToast, triggerLocationDeniedToast } = useToast()
+const { t } = useTranslator()
 
 const VALENCIA_LAT = 39.4699
 const VALENCIA_LNG = -0.3763
@@ -77,6 +84,7 @@ const RADIUS_KM = 20
 
 const mapContainer = ref(null)
 const isMapLoading = ref(true)
+const mapBaseError = ref(false)
 const selectedSpot = ref(null)
 const userLocation = ref(null)
 const isWithinRadius = ref(false)
@@ -186,7 +194,11 @@ onMounted(async () => {
   const glMap = glLayer.getMaplibreMap?.()
   if (glMap) {
     glMap.once('load', revealMap)
-    glMap.once('error', revealMap)
+    glMap.once('error', () => {
+      // Style didn't load before the first frame — see components/home/Map.vue.
+      if (isMapLoading.value) mapBaseError.value = true
+      revealMap()
+    })
   }
   loadingFallback = setTimeout(revealMap, 3000)
 
@@ -583,5 +595,33 @@ onBeforeUnmount(() => {
     justify-content: center;
     padding: 2rem;
   }
+}
+
+/* The base map (style/tiles) failed to load — markers and controls still work. */
+.map-base-error {
+  position: absolute;
+  top: calc(var(--safe-area-top) + 5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--clr-glass-strong);
+  border: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-md);
+  color: var(--clr-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.map-base-error svg {
+  flex-shrink: 0;
+  color: var(--clr-danger);
 }
 </style>

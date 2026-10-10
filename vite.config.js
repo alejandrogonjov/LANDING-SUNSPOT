@@ -1,13 +1,41 @@
 import { VitePWA } from 'vite-plugin-pwa'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 import Icons from 'unplugin-icons/vite'
 import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
+// Vite inlines VITE_* variables at build time, so a host without them (a new
+// Vercel/Netlify project, say) builds "successfully" and ships an app that can
+// reach neither Firebase nor the map. Make that loud in the build log.
+const REQUIRED_ENV = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_APP_ID',
+  'VITE_JAWG_MAPS_TOKEN',
+]
+
+const envCheck = () => ({
+  name: 'sunspot-env-check',
+  apply: 'build',
+  configResolved(config) {
+    const env = loadEnv(config.mode, config.envDir || config.root, 'VITE_')
+    const missing = REQUIRED_ENV.filter((name) => !env[name])
+    if (missing.length) {
+      config.logger.warn(
+        `\n⚠  SUNspot: faltan variables de entorno: ${missing.join(', ')}.\n` +
+        '   La app se compilará, pero sin Firebase (spots, cuenta) ni mapa base.\n' +
+        '   Defínelas en el hosting (Vercel/Netlify → Environment Variables) o en .env — ver docs/dev/environment.md.\n'
+      )
+    }
+  },
+})
+
 export default defineConfig({
   plugins: [
+    envCheck(),
     vue(),
     Components({
       resolvers: [

@@ -6,6 +6,11 @@
 
     <div ref="mapContainer" class="leaflet-map-element"></div>
 
+    <div v-if="mapBaseError" class="map-base-error" role="status">
+      <icon-mdi-map-marker-alert-outline aria-hidden="true" />
+      <span>{{ t('map.base_error') }}</span>
+    </div>
+
     <div class="map-controls">
       <!-- Desktop: explicit zoom for mouse users (wheel and keyboard +/- also work). -->
       <div v-if="isDesktop" class="zoom-group">
@@ -85,6 +90,7 @@ const userLocation = ref(null)
 const isWithinRadius = ref(false)
 const hasInitialLocation = ref(false)
 const isMapLoading = ref(true)
+const mapBaseError = ref(false)
 const { geolocationEnabled } = useSettings()
 const { triggerToast, triggerLocationDeniedToast } = useToast()
 
@@ -254,7 +260,13 @@ onMounted(async () => {
   const glMap = glLayer.getMaplibreMap?.()
   if (glMap) {
     glMap.once('load', revealMap)
-    glMap.once('error', revealMap)
+    glMap.once('error', () => {
+      // An error before the first frame means the style itself didn't load
+      // (missing/invalid VITE_JAWG_MAPS_TOKEN, a domain not allowed for the
+      // token, offline): say so instead of showing a blank background.
+      if (isMapLoading.value) mapBaseError.value = true
+      revealMap()
+    })
   }
   loadingFallback = setTimeout(revealMap, 3000)
 
@@ -522,5 +534,33 @@ defineExpose({ flyToSpot })
 .slide-up-enter-from :deep(.bottom-sheet),
 .slide-up-leave-to :deep(.bottom-sheet) {
   transform: translateY(100%);
+}
+
+/* The base map (style/tiles) failed to load — markers and controls still work. */
+.map-base-error {
+  position: absolute;
+  top: calc(var(--safe-area-top) + 5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--clr-glass-strong);
+  border: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-md);
+  color: var(--clr-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.map-base-error svg {
+  flex-shrink: 0;
+  color: var(--clr-danger);
 }
 </style>
