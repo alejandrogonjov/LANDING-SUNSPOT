@@ -30,6 +30,14 @@ language support — the workspace recommends it automatically.
 
 A `.env` file is required (not committed): copy [`.env.example`](.env.example) and fill in `VITE_JAWG_MAPS_TOKEN` and the `VITE_FIREBASE_*` values — see [`docs/dev/environment.md`](docs/dev/environment.md).
 
+## Desktop
+
+The same app adapts to large screens: at **1024px and wider** a sidebar replaces
+the bottom navigation, the map shows a side panel with search and the spot
+list, Explore keeps its filters visible, and bottom sheets open as dialogs.
+Below 1024px the mobile layout is untouched. Architecture and conventions:
+*Desktop layout* in [`AGENTS.md`](AGENTS.md).
+
 ## Project Structure
 
 ```

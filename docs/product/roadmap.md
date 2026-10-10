@@ -24,6 +24,10 @@ first thing to check before starting a major task.
 - **Dark mode**: full light/dark theme, toggled in `/ajustes` (now a public
   route) and following the device by default. Also the fix for Android
   browsers force-inverting the app — see *Theming* in `AGENTS.md`.
+- **Desktop layout (phase 1)**: at ≥ 1024px a persistent sidebar replaces the
+  bottom nav and drawer, the map gets a side panel (search, list, preview),
+  Explore keeps its filters visible, sheets open as dialogs, and list pages use
+  grids. Below 1024px the app is unchanged. See *Desktop layout* in `AGENTS.md`.
 
 ## Next — Sun Exposure Engine
 
@@ -56,3 +60,9 @@ Against what ships today, the gaps are:
       top-scoring spots.
 - [ ] **Onboarding answers → recommendations** — the answers are stored but
       nothing consumes them yet.
+- [ ] **Desktop, next steps** — keyboard focus trap inside dialogs (focus moves
+      in and back out today, but Tab can leave an open dialog); arrow-key
+      navigation in the map panel list; marker clustering if the catalogue
+      grows; a first-class camera picker for QR scanning on laptops
+      (`/escanear` works with a webcam but was built for phones).
+

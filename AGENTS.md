@@ -34,17 +34,18 @@ You are an AI developer helping build **SUNspot**, a PWA designed to help users 
 ```
 src/
 ├── main.js                  # Entry point — mounts Vue immediately, registers the PWA SW
-├── App.vue                  # Root with router-view, AppLoader, Toast
+├── App.vue                  # Root with router-view, AppLoader, Toast; desktop shell (sidebar + .app-view)
 ├── style.css                # Global CSS variables and layout tokens; light + dark themes
 ├── firebase.js              # Firebase init; exports `auth`, `db`, `getCurrentUser`
 ├── firebaseLazy.js          # `loadFirebase()` — on-demand Firebase for the entry graph
 ├── router/index.js          # All routes (lazy-loaded) + auth/admin navigation guards
 ├── components/
 │   ├── ui/                  # Reusable primitives: Toast, AppLoader, Back, MapSkeleton
-│   ├── home/                # Map, Header, Weather, SearchBar, SpotBottomSheet, UserAvatar, UserMenuSheet
-│   ├── explore/             # SpotCard, ExploreFilters
+│   ├── home/                # Map, Header, Weather, SearchBar, SpotBottomSheet, SpotPreview, UserAvatar,
+│   │                        #   UserMenuSheet; desktop: MapExplorerPanel, SpotListItem
+│   ├── explore/             # SpotCard, ExploreFilters (sheet), ExploreFilterControls (shared controls)
 │   ├── spot/                # SpotHeroImages, SpotInfo, SpotLocationAction, UVIntensityWheel, DVitamin, SolarInterval
-│   ├── inc/                 # Layout chrome: Nav, MenuDrawer
+│   ├── inc/                 # Layout chrome: Nav, MenuDrawer (mobile); DesktopSidebar (≥ 1024px)
 │   ├── account/             # AccountHeader, BookmarkedSpots, ProfileSuggestions, NotificationSection, AmbassadorModal, ApplySpotSheet
 │   ├── admin/               # SpotBasicInfo, SpotLocation, SpotImageManager
 │   ├── personal/            # Float (FAB), PersonalSpotBottomSheet
@@ -64,7 +65,8 @@ src/
 │   └── AdminLayout.vue      # Admin pages — renders Back + route title from meta
 ├── composables/             # Shared reactive state (module-level singletons)
 ├── directives/              # dragClose.js (v-drag-close, registered in main.js)
-├── utils/                   # geo.js, image.js, solarHorizon.js, map.js, uv.js, authCache.js, download.js
+├── utils/                   # geo.js, image.js, solarHorizon.js, map.js, uv.js, authCache.js, download.js,
+│                            #   spotSearch.js
 └── data/                    # profiles.js, onboardingQuestions.js, skinTones.js,
                              #   ambassadors.js, schema.json
 ```
@@ -89,6 +91,8 @@ Composables use **module-level** `ref`/`reactive` — state is a singleton that 
 | `useBattery.js` | Circadian battery test save/fetch (Firestore) |
 | `useSolarHorizon.js` | Resolves a spot's building-horizon profile (stored → flat fallback, no network); `computeForLocation` is the Overpass path, used only on admin save |
 | `useSpotSunInterval.js` | Reactive `"HH:MM - HH:MM"` primary sun window for today (season-aware, network-free); shared by cards + spot detail |
+| `useViewport.js` | `isDesktop` (≥ 1024px, one shared `matchMedia`) for the few places where desktop renders a *different structure*; see *Desktop layout* |
+| `useSignOut.js` | `signOutAndGoHome()` — sign out and land on the map with the `logged-out` toast; used by the nav chrome (drawer, avatar menu, desktop sidebar) |
 
 **`useUser()` API:**
 ```js
@@ -383,7 +387,8 @@ Defined in `src/style.css`. Use these before writing new CSS.
 - `.sheet-handle` — drag indicator pill
 - `.sheet-content` — scrollable padded body
 - `.sheet-header` / `.sheet-title` / `.sheet-subtitle` — standard header layout
-- `v-drag-close="() => $emit('close')"` — add to the `.bottom-sheet` element to enable drag-down-to-dismiss (touch anywhere; mouse from the handle/header). Global directive from `directives/dragClose.js`; the value is the close callback. Content scrolls normally and only starts dragging the sheet when `.sheet-content` is at the top.
+- `v-drag-close="() => $emit('close')"` — add to the `.bottom-sheet` element to enable drag-down-to-dismiss (touch anywhere; mouse from the handle/header below 1024px). Global directive from `directives/dragClose.js`; the value is the close callback. Content scrolls normally and only starts dragging the sheet when `.sheet-content` is at the top. It also gives every sheet **Escape to close** (top-most sheet only) and, on desktop, moves focus into the sheet on open and back to the trigger on close.
+- **Desktop (≥ 1024px)**: the same markup renders as a **centred dialog** (max 560px, rounded, no handle) — see *Desktop layout*. A page-scoped `.sheet-overlay` override that pins the sheet low needs a desktop counterpart (`PersonalMap.vue` has one).
 
 **Utility classes:**
 - `.no-scrollbar` — hides scrollbar visually, scroll still works
@@ -391,11 +396,13 @@ Defined in `src/style.css`. Use these before writing new CSS.
 - `.sunset` — colors text `var(--clr-sunset)`
 
 **Key layout tokens:**
-- `--max-width: 768px` — app container width; content is centered and capped at this width. The app stays full-bleed below it (mobile layout unchanged); larger screens show the centered band with canvas showing on either side.
+- `--max-width: 768px` — app container width; content is centered and capped at this width. The app stays full-bleed below it (mobile layout unchanged); between 768 and 1023px the centered band shows with canvas on either side. At ≥ 1024px `#app` is uncapped and this width becomes the default *content column* next to the sidebar — see *Desktop layout*.
 - `--max-width-wide: 768px` — cap for map-first pages. Routes with `meta.wide` (currently `home`, `personal-map`) get the `app--wide` class on `#app` (toggled in `App.vue`), which overrides `--max-width` to this value so the sheets/drawer widen together. It currently matches `--max-width` — the whole app, maps included, stays in one band — but stays a separate token so the map pages can widen again without touching every other page.
 - `--max-width-chrome: 768px` — cap for the bottom nav *items* (`Nav.vue` `.nav-inner`), centered regardless of the page's `--max-width`. The nav *bar* (`.bottom-nav`) itself spans the full `--max-width` band — only its inner content is capped.
 - `--max-width-search: 640px` — cap for the home search input (`SearchBar.vue` `.search-container`). The home `.floating-header` spans the full band (menu button far left, avatar far right); only the search is capped.
-- `--nav-height: 64px` — bottom nav bar height
+- `--max-width-page: 1240px` — desktop only: content column for routes with `meta.desktopWide` (see *Desktop layout*).
+- `--sidebar-width: 248px` / `--sidebar-width-rail: 84px` — desktop sidebar; the rail applies between 1024 and 1279px.
+- `--nav-height: 64px` — bottom nav bar height (**0 on desktop**, where there is no bottom nav — every `--total-nav-height` offset collapses with it)
 - `--total-nav-height` — nav + safe area bottom (use for scroll padding)
 - `--safe-area-*` — iOS/Android inset vars, already applied to `body`
 - `--transition: 0.2s ease-in-out` — standard transition duration
@@ -491,8 +498,74 @@ SUNspot is not a medical product and the team are not qualified health professio
 4. **Images**: Always serve via `getOptimizedImageUrl()` from `utils/image.js` (Cloudinary `f_auto`, `q_auto`)
 5. **Firebase**: Follow patterns in `firebase.js`; Firestore access uses `db` export
 6. **XSS**: Never use `v-html` with user-generated content
-7. **Mobile-first**: Test on small screen before considering desktop; `user-scalable=no` on map viewport
+7. **Mobile-first, desktop-checked**: Test on small screen first, then at ≥ 1024px (see *Desktop layout*); `user-scalable=no` on map viewport
 8. **Social handles**: Render clean `@username` via `socialHandle` parsing — never raw URLs or static platform names
+
+## Desktop layout (≥ 1024px)
+
+One app, two compositions. Below **1024px** the app is exactly the mobile app
+(the desktop work was verified pixel-identical at 360–768px); at 1024px and
+above it switches to a desktop composition. Same routes, same components, same
+composables — no second app and no duplicated business logic.
+
+**Breakpoint.** `DESKTOP_MIN_WIDTH = 1024` in `composables/useViewport.js`. CSS
+can't import it, so stylesheets use the literal `@media (min-width: 1024px)`
+(`grep -rn "min-width: 1024px" src`). Use `useViewport().isDesktop` only when the
+*structure* differs (a component rendered or not); purely visual changes go in a
+media query.
+
+**Shell** (`App.vue` + `style.css` › *Desktop*):
+- `DesktopSidebar.vue` replaces the bottom nav (`Nav.vue`, hidden by CSS) and the
+  menu drawer (`MenuDrawer.vue`, not rendered). It carries every destination of
+  the nav, the drawer and the avatar menu: Mapa, Explorar, Suncronización,
+  Embajadores · Mi cuenta, Mis favoritos (signed in), Personal spots, Ajustes,
+  Panel Admin (admins) · user card + Cerrar sesión, or Iniciar sesión. Between
+  1024 and 1279px it collapses to an icon rail with tooltips.
+- `router-view` sits in `.app-view`. On mobile it is `display: contents`, so
+  pages are still direct children of `#app` and nothing moves. On desktop it is
+  the content column next to the sidebar, sized by route meta:
+
+| Route meta | Desktop column | Routes |
+|---|---|---|
+| *(none)* | 768px, centred — the band the page was designed in | most pages (settings, auth, circadian, profile, notifications, admin forms…) |
+| `desktopWide: true` | `--max-width-page` (1240px); the page lays itself out in a grid | `explore`, `spot`, `account`, `bookmarks`, `personal-spots`, `ambassadors`, `dashboard` |
+| `wide: true` | full width | `home`, `personal-map` |
+| `chrome: false` | no sidebar (focused flow) | `onboarding` |
+
+- `--nav-height` is `0` on desktop, so paddings built on `--total-nav-height`
+  need no desktop override.
+- Keyboard: a global `:focus-visible` ring (brand orange) for links, buttons and
+  fields; sheets close with Escape (see *Bottom sheet pattern*).
+
+**Per page:**
+- **Home** — `MapExplorerPanel.vue` (search, the list of every spot, and the
+  selected spot's preview) next to the map. The preview body is
+  `SpotPreview.vue`, shared with the mobile `SpotBottomSheet.vue`; search
+  matching is `utils/spotSearch.js`, shared with `SearchBar.vue`. Selection lives
+  in `Home.vue` and reaches `Map.vue` through `v-model:selected-spot`, so a
+  marker click and a row click are one action; hovering a row enlarges its
+  marker. The map gets zoom buttons, a `ResizeObserver` (the container resizes
+  without a window resize), and skips the mobile `-0.002` latitude offset that
+  keeps a marker above the bottom sheet. The weather sheet opens as a dialog and
+  leaves the selection alone. `Home.vue` keeps the `Map` in the same place in
+  the tree on both layouts, so crossing the breakpoint never re-creates it.
+- **Explore** — filters always visible in a sticky side panel
+  (`ExploreFilterControls.vue`, the same controls the mobile sheet renders),
+  cards in an auto-fill grid, live result count.
+- **Spot** — framed gallery with previous/next buttons and ←/→ keys (shown on
+  `(hover: hover) and (pointer: fine)` devices, so touch phones are unchanged);
+  a grid places the exposure wheel beside the vitamin D / tanning cards it
+  drives. DOM order is the mobile order.
+- **Account** — content | actions columns (`display: contents` wrappers on
+  mobile). **Bookmarks, Ambassadors, Personal spots, Admin dashboard** — grids.
+- **Download** — offers *Instalar en este ordenador* when the desktop browser
+  fired `beforeinstallprompt`.
+
+**Adding a page:** it works on desktop as-is in the 768px column. If it is a
+list or a dashboard, add `desktopWide: true` and a `@media (min-width: 1024px)`
+grid at the end of its `<style>` (after the base rules — same specificity, so
+order decides). A wrapper with `margin: 0 auto` inside the flex column
+shrink-wraps: give it `width: 100%`.
 
 ## Maps & PWA
 
