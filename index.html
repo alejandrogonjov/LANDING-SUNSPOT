@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <!-- PWA Meta Tags -->
+  <!-- Both are rewritten by composables/useTheme.js when the theme changes;
+       these values are the light defaults the bootstrap below may override. -->
+  <meta name="theme-color" content="#fffcf2" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="My awesome Progressive Web App" />
+
+  <!-- Theme bootstrap. Runs before the stylesheet paints so a dark-mode user
+       never sees a white flash. Deliberately duplicates the storage key and the
+       resolution rule from src/composables/useTheme.js: that module is inside
+       the bundle, and by the time the bundle runs the first paint has happened.
+       Keep the two in sync — the key is `sunspot_theme`, the stored values are
+       'light' | 'dark', and anything else (including nothing stored) means
+       "follow the system". -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('sunspot_theme')
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.setAttribute('data-theme', theme)
+        if (theme === 'dark') {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#17150f')
+        }
+      } catch (e) {
+        /* Storage blocked (private mode) — the light default already applies. */
+      }
+    })()
+  </script>
+
+  <!-- iOS Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SUNspot" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+
+  <!-- Android Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <title>SUNspot</title>
+
+  <!-- Map tiles: start the style fetch here, during HTML parse, rather than
+       when Map.vue mounts. Without this the first byte of map data is only
+       requested after the bundle has downloaded, parsed and mounted, so the
+       style RTT + TLS handshake sit at the end of a long serial chain instead
+       of overlapping with it.
+       The URL must stay identical to MAP_STYLE_URL in src/utils/map.js.
+       Vite replaces %VITE_JAWG_MAPS_TOKEN% with the env variable at build.
+       If devtools shows tiles served from another Jawg host, preconnect it
+       here too. -->
+  <link rel="preconnect" href="https://api.jawg.io" crossorigin />
+  <link rel="preload" as="fetch" crossorigin
+    href="https://api.jawg.io/styles/jawg-terrain.json?access-token=%VITE_JAWG_MAPS_TOKEN%" />
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

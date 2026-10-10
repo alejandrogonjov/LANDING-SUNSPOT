@@ -1,0 +1,5 @@
+# SPA fallback for Netlify.
+# The router uses createWebHistory(), so deep links like /descargar or /spot/:id
+# have no matching file on disk. Serve index.html with a 200 (not a redirect) and
+# let vue-router resolve the path client-side.
+/*  /index.html  200

@@ -1,0 +1,35 @@
+{
+  "name": "sunspot",
+  "private": true,
+  "version": "1.0.0",
+  "author": "Alejandro González Jovani, Álvaro González Castelló",
+  "contributors": [
+    "Kevin Jérémy Gautier (developer)"
+  ],
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "^0.1.3",
+    "@vite-pwa/assets-generator": "^1.0.2",
+    "firebase": "^12.10.0",
+    "html5-qrcode": "^2.3.8",
+    "leaflet": "^1.9.4",
+    "maplibre-gl": "^5.19.0",
+    "suncalc": "^1.9.0",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@iconify/json": "^2.2.433",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "unplugin-icons": "^23.0.1",
+    "unplugin-vue-components": "^31.0.0",
+    "vite": "^7.2.4",
+    "vite-plugin-pwa": "^1.2.0"
+  }
+}

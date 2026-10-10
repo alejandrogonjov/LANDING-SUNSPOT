@@ -1,0 +1,96 @@
+{
+  "spots": {
+    "spot_id": "string",
+    "name": "string",
+    "address": "string",
+    "description": "string",
+    "web": "string",
+    "category": "string (sport | nature | culture | hostelry)",
+    "location": "geopoint",
+    "images": "array<string>",
+    "is_free": "boolean",
+    "is_sunrise": "boolean",
+    "is_sunset": "boolean",
+    "has_shadow": "boolean",
+    "has_natural_shadow": "boolean",
+    "horizon_profile": "array<number> (360 elevation angles in deg, 0.1° precision, index = compass azimuth)",
+    "horizon_source": "string (osm | fallback)",
+    "horizon_computed_at": "timestamp",
+    "created_at": "timestamp",
+    "updated_at": "timestamp"
+  },
+  "users": {
+    "uid": "string",
+    "email": "string",
+    "name": "string",
+    "avatar": "number | null",
+    "role": "string (admin | user)",
+    "bookmarks": "array<string>",
+    "visited_spots": "map<string, timestamp>",
+    "profile": {
+      "_comment": "legacy — written by the removed Crew questionnaire; still read for accounts that have it",
+      "type": "string",
+      "answers": {
+        "origin": "string (valencia | spain | eu | intl)",
+        "age_range": "string (gen-z | millennial | gen-x | silver)",
+        "stay_duration": "string (short | medium | long | resident)",
+        "companions": "array<string> (solo | couple | friends | family)",
+        "preferences": "array<string> (sport | nature | culture | hostelry)"
+      }
+    },
+    "onboarding": {
+      "version": "number",
+      "status": "string (completed | skipped)",
+      "completed_at": "string (ISO date)",
+      "answers": {
+        "spot_category": "array<string> (ranked: sport | culture | hostelry | nature | other)",
+        "spot_category_other": "string (free text, only when 'other' was ranked)",
+        "companions": "array<string> (ranked: solo | couple | friends | family)",
+        "spot_features": "array<string> (ranked: natural_shadow | shadow | wind | quiet | other)",
+        "spot_features_other": "string (free text, only when 'other' was ranked)",
+        "season": "array<string> (ranked: spring | summer | autumn | winter)",
+        "sun_sensitivity": "number (1-6, Fitzpatrick phototype)"
+      }
+    },
+    "circadian": {
+      "rawAnswers": "map<string, number>",
+      "blockScores": {
+        "light": "number",
+        "sleep": "number",
+        "rhythm": "number",
+        "disruptors": "number"
+      },
+      "totalScore": "number",
+      "worstBlock": "string (light | sleep | rhythm | disruptors)",
+      "createdAt": "timestamp"
+    },
+    "created_at": "timestamp",
+    "updated_at": "timestamp"
+  },
+  "notifications": {
+    "title": "string",
+    "body": "string",
+    "spotId": "string | null",
+    "createdBy": "string",
+    "readBy": "array<string>",
+    "createdAt": "timestamp"
+  },
+  "personal_spots": {
+    "__storage": "localStorage key 'sunspot_personal_spots' — NOT a Firestore collection",
+    "id": "string (uuid)",
+    "spot_id": "string",
+    "name": "string",
+    "description": "string",
+    "address": "string",
+    "category": "string (sport | nature | culture | hostelry)",
+    "lat": "number | null",
+    "lng": "number | null",
+    "is_free": "boolean",
+    "is_sunrise": "boolean",
+    "is_sunset": "boolean",
+    "has_shadow": "boolean",
+    "has_natural_shadow": "boolean",
+    "created_at": "number (Unix ms)",
+    "updated_at": "number (Unix ms)"
+  }
+}
