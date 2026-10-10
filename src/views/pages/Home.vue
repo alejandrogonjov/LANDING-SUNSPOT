@@ -1,11 +1,26 @@
 <template>
   <MainLayout>
-    <Header :spots="spots" @toggle-menu="isDrawerOpen = true" @select-spot="handleSpotSelection" />
-    <Map ref="mapRef" :spots="spots" />
-    <MenuDrawer :is-open="isDrawerOpen" @close="isDrawerOpen = false" />
+    <!-- Mobile chrome. On desktop the sidebar (App.vue) and the side panel
+         below carry the menu, the account entry point and the search. -->
+    <Header v-if="!isDesktop" :spots="spots" @toggle-menu="isDrawerOpen = true" @select-spot="handleSpotSelection" />
+
+    <!-- Both wrappers are `display: contents` on mobile, so the map keeps
+         filling #app exactly as before; on desktop they lay out panel | map.
+         The Map is never re-parented, so crossing the breakpoint keeps it. -->
+    <div class="home-layout">
+      <MapExplorerPanel v-if="isDesktop" :spots="spots" :loading="loading" :error="error"
+        :selected-spot="selectedSpot" @select="handleSpotSelection" @clear="selectedSpot = null"
+        @hover="hoveredSpotId = $event" />
+
+      <div class="home-map">
+        <Map ref="mapRef" v-model:selected-spot="selectedSpot" :spots="spots" :highlighted-spot-id="hoveredSpotId" />
+      </div>
+    </div>
+
+    <MenuDrawer v-if="!isDesktop" :is-open="isDrawerOpen" @close="isDrawerOpen = false" />
 
     <Transition name="fade">
-      <div v-if="loading && !showToast" class="data-status-toast">
+      <div v-if="loading && !showToast && !isDesktop" class="data-status-toast">
         Sincronizando puntos...
       </div>
     </Transition>
@@ -20,7 +35,9 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import Header from '@/components/home/Header.vue'
 import Map from '@/components/home/Map.vue'
 import MenuDrawer from '@/components/inc/MenuDrawer.vue'
+import MapExplorerPanel from '@/components/home/MapExplorerPanel.vue'
 import { useToast } from '@/composables/useToast'
+import { useViewport } from '@/composables/useViewport'
 
 defineOptions({
   name: 'Home'
@@ -28,7 +45,15 @@ defineOptions({
 
 const isDrawerOpen = ref(false)
 const mapRef = ref(null)
-const { spots, loading } = useSpots()
+const { spots, loading, error } = useSpots()
+const { isDesktop } = useViewport()
+
+// Shared by the map (markers, mobile bottom sheet) and the desktop side panel.
+const selectedSpot = ref(null)
+const hoveredSpotId = ref(null)
+
+// The drawer doesn't exist on desktop; don't let it reappear open on the way back.
+watch(isDesktop, () => { isDrawerOpen.value = false })
 const route = useRoute()
 const router = useRouter()
 
@@ -63,6 +88,25 @@ const handleSpotSelection = (spot) => {
 </script>
 
 <style scoped>
+.home-layout,
+.home-map {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .home-layout {
+    display: flex;
+    height: 100dvh;
+  }
+
+  .home-map {
+    display: block;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .data-status-toast {
   position: fixed;
   bottom: calc(var(--total-nav-height) + 0.5rem);

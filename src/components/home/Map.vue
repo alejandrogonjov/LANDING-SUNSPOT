@@ -7,6 +7,16 @@
     <div ref="mapContainer" class="leaflet-map-element"></div>
 
     <div class="map-controls">
+      <!-- Desktop: explicit zoom for mouse users (wheel and keyboard +/- also work). -->
+      <div v-if="isDesktop" class="zoom-group">
+        <button class="map-btn" @click="zoomIn" :aria-label="t('map.zoom_in')" :title="t('map.zoom_in')">
+          <icon-mdi-plus />
+        </button>
+        <button class="map-btn" @click="zoomOut" :aria-label="t('map.zoom_out')" :title="t('map.zoom_out')">
+          <icon-mdi-minus />
+        </button>
+      </div>
+
       <button class="map-btn" @click="openWeather" aria-label="Ver tiempo">
         <icon-mdi-weather-sunny v-if="isDay" />
         <icon-mdi-weather-night v-else />
@@ -26,7 +36,9 @@
 
     <Teleport to="body">
       <Transition name="slide-up">
-        <SpotBottomSheet v-if="selectedSpot && !isWeatherOpen" :key="selectedSpot.id" :spot="selectedSpot"
+        <!-- Desktop shows the selected spot in the side panel (MapExplorerPanel)
+             instead, so the map stays usable next to it. -->
+        <SpotBottomSheet v-if="selectedSpot && !isWeatherOpen && !isDesktop" :key="selectedSpot.id" :spot="selectedSpot"
           :user-location="userLocation" @close="selectedSpot = null" />
 
         <Weather v-else-if="isWeatherOpen" key="weather-sheet" @close="isWeatherOpen = false" />
@@ -46,12 +58,20 @@ import MapSkeleton from '@/components/ui/MapSkeleton.vue'
 import { useTranslator } from '@/composables/useTranslator'
 import { useSettings } from '@/composables/useSettings'
 import { useToast } from '@/composables/useToast'
+import { useViewport } from '@/composables/useViewport'
 import { calculateDistance } from '@/utils/geo'
 import { MAP_STYLE_URL, loadLastView, saveLastView } from '@/utils/map'
 
 const props = defineProps({
-  spots: { type: Array, required: true }
+  spots: { type: Array, required: true },
+  // Desktop: the spot whose row is hovered/focused in the side panel.
+  highlightedSpotId: { type: String, default: null },
 })
+
+// The selected spot. A v-model so Home.vue can share it with the desktop side
+// panel; without a binding it behaves as local state, as it always did.
+const selectedSpot = defineModel('selectedSpot', { type: Object, default: null })
+const { isDesktop } = useViewport()
 
 const { t, categoryKeys, getCategoryColor } = useTranslator()
 
@@ -61,7 +81,6 @@ const RADIUS_KM = 20
 
 const mapContainer = ref(null)
 const isWeatherOpen = ref(false)
-const selectedSpot = ref(null)
 const userLocation = ref(null)
 const isWithinRadius = ref(false)
 const hasInitialLocation = ref(false)
@@ -72,6 +91,8 @@ const { triggerToast, triggerLocationDeniedToast } = useToast()
 let map = null
 let markerLayer = null
 let loadingFallback = null
+let resizeObserver = null
+const markersById = new Map()
 const userMarker = ref(null)
 const userCircle = ref(null)
 
@@ -87,6 +108,7 @@ const renderMarkers = () => {
   if (!map || !props.spots) return
   if (markerLayer) markerLayer.clearLayers()
   else markerLayer = L.layerGroup().addTo(map)
+  markersById.clear()
 
   props.spots.forEach(spot => {
     const coords = getLatLng(spot)
@@ -102,11 +124,30 @@ const renderMarkers = () => {
       iconAnchor: [15, 15]
     })
 
-    const marker = L.marker(coords, { icon: customIcon })
+    // `title` gives mouse users the spot name on hover and names the marker
+    // for keyboard/screen-reader users (Leaflet markers are focusable).
+    const marker = L.marker(coords, { icon: customIcon, title: spot.name || '' })
     marker.on('click', () => flyToSpot(spot))
     markerLayer.addLayer(marker)
+    markersById.set(spot.id, marker)
+  })
+  updateMarkerEmphasis()
+}
+
+// Desktop: enlarge the selected marker and the one whose row is hovered in the
+// side panel, so the list and the map read as one. Mobile is left as it was.
+const updateMarkerEmphasis = () => {
+  markersById.forEach((marker, id) => {
+    const selected = isDesktop.value && selectedSpot.value?.id === id
+    const highlighted = isDesktop.value && props.highlightedSpotId === id
+    const el = marker.getElement()
+    el?.classList.toggle('is-selected', selected)
+    el?.classList.toggle('is-highlighted', highlighted)
+    marker.setZIndexOffset(selected || highlighted ? 1000 : 0)
   })
 }
+
+watch(() => [props.highlightedSpotId, selectedSpot.value?.id, isDesktop.value], updateMarkerEmphasis)
 
 // Watch for real-time changes
 watch(() => props.spots, () => {
@@ -118,7 +159,10 @@ const flyToSpot = (spot) => {
   const coords = getLatLng(spot)
   isWeatherOpen.value = false
   selectedSpot.value = spot
-  map.flyTo([coords[0] - 0.002, coords[1]], 16, {
+  // On mobile the bottom sheet covers the lower half, so aim a little south of
+  // the spot to keep its marker visible above it. Desktop has no sheet.
+  const latOffset = isDesktop.value ? 0 : 0.002
+  map.flyTo([coords[0] - latOffset, coords[1]], 16, {
     animate: true,
     duration: 1.5
   })
@@ -144,8 +188,13 @@ const isDay = computed(() => {
 
 const openWeather = () => {
   isWeatherOpen.value = !isWeatherOpen.value
-  if (isWeatherOpen.value) selectedSpot.value = null
+  // Both are bottom sheets on mobile, so one replaces the other. On desktop the
+  // spot lives in the side panel and the weather opens as a dialog over it.
+  if (isWeatherOpen.value && !isDesktop.value) selectedSpot.value = null
 }
+
+const zoomIn = () => map?.zoomIn()
+const zoomOut = () => map?.zoomOut()
 
 onActivated(() => {
   if (map) {
@@ -209,6 +258,13 @@ onMounted(async () => {
   loadingFallback = setTimeout(revealMap, 3000)
 
   renderMarkers()
+
+  // The container also changes size without a window resize (the desktop side
+  // panel, the sidebar narrowing to a rail); Leaflet only watches the window.
+  if ('ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(() => map?.invalidateSize())
+    resizeObserver.observe(mapContainer.value)
+  }
 
   map.on('locationfound', (e) => {
     const dist = calculateDistance(e.latlng.lat, e.latlng.lng, VALENCIA_LAT, VALENCIA_LNG)
@@ -275,6 +331,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (loadingFallback) { clearTimeout(loadingFallback); loadingFallback = null }
+  if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null }
   if (map) {
     map.stopLocate()
   }
@@ -332,6 +389,37 @@ defineExpose({ flyToSpot })
 
 .map-btn:active {
   transform: scale(0.9);
+}
+
+.zoom-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (hover: hover) {
+  .map-btn:hover {
+    color: var(--clr-primary-hover);
+    box-shadow: var(--shadow-md), 0 0 0 3px var(--clr-primary-soft);
+  }
+}
+
+/* Desktop: the map fills the area next to the side panel (Home.vue's
+   .home-map), which is its positioned ancestor there. */
+@media (min-width: 1024px) {
+  .map-controls,
+  .map-legend {
+    bottom: 1.5rem;
+  }
+
+  .map-controls {
+    right: 1.25rem;
+  }
+
+  .map-legend {
+    left: 1.25rem;
+  }
 }
 
 /* Legend Pill */
@@ -393,6 +481,12 @@ defineExpose({ flyToSpot })
   justify-content: center;
   overflow: hidden;
   transition: transform 0.2s ease;
+}
+
+:deep(.custom-marker.is-selected .marker-dot),
+:deep(.custom-marker.is-highlighted .marker-dot) {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--clr-primary), transparent 65%), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :deep(.marker-internal-logo) {

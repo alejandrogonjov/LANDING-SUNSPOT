@@ -100,6 +100,14 @@
   /* Cap for the home search input. The header spans the full band (menu button
      far left, avatar far right); the search stays this wide at most. */
   --max-width-search: 640px;
+  /* Desktop (≥ 1024px) only — see the "Desktop" section at the end of this
+     file. Content column for routes with `meta.desktopWide`; every other page
+     keeps the 768px column it was designed in. */
+  --max-width-page: 1240px;
+  /* Persistent desktop sidebar (components/inc/DesktopSidebar.vue); narrows to
+     an icon rail between 1024 and 1279px. */
+  --sidebar-width: 248px;
+  --sidebar-width-rail: 84px;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -253,6 +261,13 @@ h3 {
    token). Toggled by App.vue from the route's `wide` meta. */
 #app.app--wide {
   --max-width: var(--max-width-wide);
+}
+
+/* The router-view wrapper in App.vue. On mobile it generates no box, so pages
+   remain direct flex children of #app — the layout is exactly what it was
+   before the wrapper existed. The desktop section gives it a real box. */
+.app-view {
+  display: contents;
 }
 
 main {
@@ -638,4 +653,97 @@ a {
   margin: 0 0 1.5rem 0;
   line-height: 1.5;
   font-weight: 500;
+}
+/* --- Keyboard focus --- */
+/* Visible focus ring for keyboard navigation (desktop). `:focus-visible` is
+   not triggered by taps or mouse clicks, so touch users see no change. It
+   outranks the `outline: none` some components set on their buttons. */
+:is(a, button, input, select, textarea, summary, label, [tabindex]):focus-visible {
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 2px;
+}
+
+/* Sheets take focus programmatically when they open on desktop (see
+   directives/dragClose.js); the panel itself needs no ring. */
+.bottom-sheet:focus-visible {
+  outline: none;
+}
+
+/* ==========================================================================
+   Desktop (≥ 1024px)
+   ==========================================================================
+   One app, two compositions. Below 1024px nothing in this section applies and
+   the mobile layout is untouched. At 1024px and above:
+   - DesktopSidebar replaces the bottom nav and the menu drawer (App.vue);
+   - the content column sits next to it: 768px by default, --max-width-page
+     for `meta.desktopWide` routes, full width for map routes (`meta.wide`);
+   - bottom sheets become centred dialogs (same markup, same close paths);
+   - --nav-height drops to 0, so every offset that made room for the bottom
+     nav (`--total-nav-height`) collapses on its own.
+   ⚠️ The breakpoint is duplicated in composables/useViewport.js. */
+@media (min-width: 1024px) {
+  :root {
+    --nav-height: 0px;
+  }
+
+  body {
+    background-color: var(--clr-background);
+  }
+
+  #app {
+    max-width: none;
+    box-shadow: none;
+  }
+
+  #app.app--with-sidebar {
+    padding-left: var(--sidebar-width);
+  }
+
+  .app-view {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    min-height: 100dvh;
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  #app.app--page-wide .app-view {
+    max-width: var(--max-width-page);
+  }
+
+  #app.app--wide .app-view {
+    max-width: none;
+  }
+
+  /* Bottom sheets → dialogs. Drag-to-close stays for touch; the handle goes. */
+  .sheet-overlay {
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+
+  .bottom-sheet {
+    max-width: 560px;
+    max-height: calc(100dvh - 4rem);
+    border-radius: var(--radius-lg);
+    padding-bottom: 0.5rem;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  }
+
+  .sheet-handle {
+    display: none;
+  }
+
+  .sheet-content {
+    padding: 1.75rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  :root {
+    --sidebar-width: var(--sidebar-width-rail);
+  }
 }

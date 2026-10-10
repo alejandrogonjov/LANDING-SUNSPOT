@@ -89,7 +89,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useUser } from '@/composables/useUser'
-import { loadFirebase } from '@/firebaseLazy'
+import { useSignOut } from '@/composables/useSignOut'
 
 defineProps({
   isOpen: Boolean
@@ -99,6 +99,7 @@ const emit = defineEmits(['close'])
 const router = useRouter()
 
 const { user, userData } = useUser()
+const { signOutAndGoHome } = useSignOut()
 
 const handleLogin = () => {
   emit('close')
@@ -106,14 +107,7 @@ const handleLogin = () => {
 }
 
 const handleLogout = async () => {
-  try {
-    const { auth, signOut } = await loadFirebase()
-    await signOut(auth)
-    emit('close')
-    router.push({ path: '/', query: { action: 'logged-out' } })
-  } catch (error) {
-    console.error('Error signing out:', error)
-  }
+  if (await signOutAndGoHome()) emit('close')
 }
 </script>
 

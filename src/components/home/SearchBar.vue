@@ -40,6 +40,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useTranslator } from '@/composables/useTranslator'
+import { spotMatchesQuery } from '@/utils/spotSearch'
 
 const props = defineProps({
   spots: { type: Array, required: true }
@@ -58,12 +59,7 @@ const filteredSpots = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   if (query.length < 2) return []
 
-  return props.spots.filter(spot => {
-    const nameMatch = spot.name.toLowerCase().includes(query)
-    const categoryMatch = t('categories', spot.category).toLowerCase().includes(query)
-    const tagsMatch = spot.tags?.some(tag => t('tags', tag).toLowerCase().includes(query))
-    return nameMatch || categoryMatch || tagsMatch
-  }).slice(0, 5)
+  return props.spots.filter(spot => spotMatchesQuery(spot, query, t)).slice(0, 5)
 })
 
 const updateDropdownPosition = () => {

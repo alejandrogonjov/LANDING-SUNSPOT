@@ -5,11 +5,21 @@
 //
 // Touch: drag anywhere on the sheet. If the drag starts inside a scrolled
 // `.sheet-content`, the content scrolls instead (the drag only takes over once
-// the content is at the top). Mouse (desktop): drag from the handle or header.
+// the content is at the top). Mouse: drag from the handle or header — below
+// the desktop breakpoint only; at ≥ 1024px sheets render as centred dialogs
+// (style.css › Desktop), where dragging one down makes no sense.
+//
+// Keyboard, every size: Escape closes the top-most open sheet. On desktop the
+// sheet also takes focus when it opens and hands it back when it closes, so a
+// keyboard user lands inside the dialog instead of behind it.
+
+import { DESKTOP_QUERY } from '@/composables/useViewport'
 
 const CLOSE_DISTANCE = 110 // px dragged past which the sheet closes on release
 const FLICK_VELOCITY = 0.6 // px/ms downward flick that closes regardless of distance
 const EXIT_MS = 280 // slide-out animation duration
+
+const isDialogMode = () => window.matchMedia(DESKTOP_QUERY).matches
 
 function createController(el, getClose) {
   const state = {
@@ -120,19 +130,49 @@ function createController(el, getClose) {
   }
   const onMouseDown = (e) => {
     if (e.button !== 0 || !e.target.closest('.sheet-handle, .sheet-header')) return
+    if (isDialogMode()) return
     start(e.clientY)
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
   }
 
+  // --- keyboard ---
+  const onKeyDown = (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return
+    // Only the sheet opened last (teleported sheets append to <body>) answers.
+    const open = document.querySelectorAll('[data-drag-close]')
+    if (open[open.length - 1] !== el) return
+    const close = getClose()
+    if (typeof close === 'function') close()
+  }
+
+  el.setAttribute('data-drag-close', '')
   el.addEventListener('touchstart', onTouchStart, { passive: true })
   el.addEventListener('touchmove', onTouchMove, { passive: false })
   el.addEventListener('touchend', onTouchEnd)
   el.addEventListener('touchcancel', onTouchEnd)
   el.addEventListener('mousedown', onMouseDown)
+  window.addEventListener('keydown', onKeyDown)
+
+  // Desktop dialogs: move focus in (unless the sheet focused a field itself)
+  // and remember where it came from.
+  const returnFocusTo = document.activeElement
+  if (isDialogMode()) {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1')
+    requestAnimationFrame(() => {
+      if (el.isConnected && !el.contains(document.activeElement)) el.focus({ preventScroll: true })
+    })
+  }
 
   return {
+    // Called before the sheet leaves the DOM, while focus can still be inside it.
+    restoreFocus() {
+      const active = document.activeElement
+      if (!isDialogMode() || !returnFocusTo?.isConnected) return
+      if (el.contains(active) || active === document.body) returnFocusTo.focus?.({ preventScroll: true })
+    },
     destroy() {
+      window.removeEventListener('keydown', onKeyDown)
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
@@ -151,6 +191,9 @@ export const vDragClose = {
   },
   updated(el, binding) {
     el.__dragCloseValue = binding.value
+  },
+  beforeUnmount(el) {
+    el.__dragClose?.restoreFocus()
   },
   unmounted(el) {
     el.__dragClose?.destroy()

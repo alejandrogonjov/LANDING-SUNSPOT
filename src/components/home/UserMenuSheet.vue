@@ -40,27 +40,16 @@
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { loadFirebase } from '@/firebaseLazy'
 import { useUser } from '@/composables/useUser'
+import { useSignOut } from '@/composables/useSignOut'
 
-const router = useRouter()
 const { userData } = useUser()
+const { signOutAndGoHome } = useSignOut()
 const emit = defineEmits(['close'])
 
+// Redirects to the map with the `logged-out` toast, then closes the sheet.
 const handleLogout = async () => {
-  try {
-    const { auth, signOut } = await loadFirebase()
-    await signOut(auth)
-
-    // Close the sheet first
-    emit('close')
-
-    // Redirect to landing/home with the query param for your Toast system
-    router.push({ path: '/', query: { action: 'logged-out' } })
-  } catch (error) {
-    console.error('Error signing out:', error)
-  }
+  if (await signOutAndGoHome()) emit('close')
 }
 
 // Keyboard support (Esc key)

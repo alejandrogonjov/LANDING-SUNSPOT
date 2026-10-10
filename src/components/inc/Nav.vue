@@ -78,4 +78,11 @@
 .router-link-active {
   color: var(--clr-primary);
 }
+
+/* Desktop: DesktopSidebar carries these destinations (and more). */
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
+}
 </style>

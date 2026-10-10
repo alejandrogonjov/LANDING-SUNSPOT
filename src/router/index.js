@@ -22,7 +22,7 @@ const routes = [
     path: '/explorar',
     name: 'explore',
     component: () => import('@/views/pages/Explore.vue'),
-    meta: { title: 'Explorar' }
+    meta: { desktopWide: true, title: 'Explorar' }
   },
   {
     path: '/escanear',
@@ -32,7 +32,7 @@ const routes = [
   {
     path: '/cuenta',
     name: 'account',
-    meta: { requiresAuth: true },
+    meta: { desktopWide: true, requiresAuth: true },
     component: () => import('@/views/pages/Account.vue'),
   },
   {
@@ -64,13 +64,14 @@ const routes = [
   {
     path: '/spot/:id',
     name: 'spot',
+    meta: { desktopWide: true },
     component: () => import('@/views/pages/Spot.vue'),
     props: true
   },
   {
     path: '/personal-spots',
     name: 'personal-spots',
-    meta: { requiresAuth: true, title: 'Mis Spots' },
+    meta: { desktopWide: true, requiresAuth: true, title: 'Mis Spots' },
     component: () => import('@/views/pages/PersonalSpots.vue'),
   },
   {
@@ -95,7 +96,7 @@ const routes = [
   {
     path: '/embajadores',
     name: 'ambassadors',
-    meta: { title: 'Embajadores' },
+    meta: { desktopWide: true, title: 'Embajadores' },
     component: () => import('@/views/pages/Ambassadors.vue'),
   },
   {
@@ -108,14 +109,14 @@ const routes = [
   {
     path: '/mis-favoritos',
     name: 'bookmarks',
-    meta: { requiresAuth: true, title: 'Mis favoritos' },
+    meta: { desktopWide: true, requiresAuth: true, title: 'Mis favoritos' },
     component: () => import('@/views/pages/Bookmarks.vue'),
   },
   {
     path: '/panel',
     name: 'dashboard',
     component: () => import('@/views/admin/Dashboard.vue'),
-    meta: { requiresAdmin: true, title: 'Admin' }
+    meta: { desktopWide: true, requiresAdmin: true, title: 'Admin' }
   },
   {
     path: '/panel/spot/nuevo',
@@ -145,7 +146,7 @@ const routes = [
     path: '/bienvenida',
     name: 'onboarding',
     component: () => import('@/views/pages/Onboarding.vue'),
-    meta: { requiresAuth: true, title: 'Bienvenida' }
+    meta: { chrome: false, requiresAuth: true, title: 'Bienvenida' }
   },
   {
     path: '/descargar',

@@ -6,7 +6,7 @@
 
     <SearchBar :spots="spots" @select-spot="(spot) => emit('select-spot', spot)" />
 
-    <UserAvatar :is-logged-in="!!currentUser" :user-avatar="currentUser?.avatar" :level="currentUser?.level || 0" />
+    <UserAvatar />
   </header>
 </template>
 

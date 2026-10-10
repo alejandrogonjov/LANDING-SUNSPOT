@@ -33,6 +33,38 @@ export function useTranslator() {
     solar: {
       computing: 'Calculando sombras…',
     },
+    // Desktop chrome (DesktopSidebar.vue)
+    nav: {
+      discover: 'Descubre',
+      your_space: 'Tu espacio',
+      map: 'Mapa',
+      explore: 'Explorar',
+      circadian: 'Suncronización',
+      ambassadors: 'Embajadores',
+      account: 'Mi cuenta',
+      view_account: 'Ver mi cuenta',
+      bookmarks: 'Mis favoritos',
+      personal_spots: 'Personal spots',
+      settings: 'Ajustes',
+      admin: 'Panel Admin',
+      login: 'Iniciar sesión',
+      logout: 'Cerrar sesión',
+      home: 'SUNspot — ir al mapa',
+    },
+    // Desktop map panel (MapExplorerPanel.vue) and map controls
+    map: {
+      search: 'Buscar spot...',
+      clear_search: 'Limpiar búsqueda',
+      all_spots: 'Todos los spots',
+      spot: 'spot',
+      spots: 'spots',
+      syncing: 'Sincronizando puntos...',
+      no_results: 'No hay spots con',
+      load_error: 'No se han podido cargar los spots. Revisa tu conexión e inténtalo de nuevo.',
+      sun_today: 'Sol directo hoy',
+      zoom_in: 'Acercar',
+      zoom_out: 'Alejar',
+    },
   }
 
   const t = (groupOrPath, key) => {
