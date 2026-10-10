@@ -1,7 +1,7 @@
 <template>
   <div class="hero-media-container">
     <div class="image-slider no-scrollbar" ref="slider" @scroll="handleScroll"
-      :tabindex="spot?.images?.length > 1 ? 0 : undefined" aria-label="Galería de imágenes"
+      :tabindex="spot?.images?.length > 1 ? 0 : undefined" role="region" aria-label="Galería de imágenes"
       @keydown.left.prevent="goTo(currentIndex - 1)" @keydown.right.prevent="goTo(currentIndex + 1)">
       <div v-for="(img, index) in spot?.images || []" :key="index" class="slide">
         <img :src="getOptimizedImageUrl(img, 1000)" :alt="`${spot?.name || 'Spot'} - ${index + 1}`" class="hero-img" :loading="index === 0 ? 'eager' : 'lazy'" />

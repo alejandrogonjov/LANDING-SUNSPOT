@@ -19,8 +19,19 @@ const authResolved = ref(false)
 // above is whatever the cached snapshot said — which is what lets the header
 // render on the first frame without Firebase in the entry graph.
 loadFirebase().then(({ auth, db, onAuthStateChanged, doc, onSnapshot }) => {
+  // The live listener on the signed-in user's document. Dropped on every auth
+  // change: left running past a sign-out, Firestore re-runs it without
+  // credentials and the rules answer permission-denied (logged as an error on
+  // every logout).
+  let unsubscribeUserDoc = null
+
   onAuthStateChanged(auth, (firebaseUser) => {
     authResolved.value = true
+
+    if (unsubscribeUserDoc) {
+      unsubscribeUserDoc()
+      unsubscribeUserDoc = null
+    }
 
     if (!firebaseUser) {
       user.value = null
@@ -45,7 +56,7 @@ loadFirebase().then(({ auth, db, onAuthStateChanged, doc, onSnapshot }) => {
     const userRef = doc(db, 'users', firebaseUser.uid)
 
     // Add the error callback (the second argument)
-    onSnapshot(userRef, (docSnap) => {
+    unsubscribeUserDoc = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         userData.value = { uid: firebaseUser.uid, ...docSnap.data() }
         writeAuthSnapshot({ userData: userData.value }, firebaseUser.uid)

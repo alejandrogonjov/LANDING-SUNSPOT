@@ -143,7 +143,8 @@ const updateMarkerEmphasis = () => {
     const el = marker.getElement()
     el?.classList.toggle('is-selected', selected)
     el?.classList.toggle('is-highlighted', highlighted)
-    marker.setZIndexOffset(selected || highlighted ? 1000 : 0)
+    const zIndexOffset = selected || highlighted ? 1000 : 0
+    if (marker.options.zIndexOffset !== zIndexOffset) marker.setZIndexOffset(zIndexOffset)
   })
 }
 

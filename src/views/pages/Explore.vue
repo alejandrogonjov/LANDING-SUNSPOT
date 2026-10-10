@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
 
   .spots-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.5rem;
     padding: 0;
   }
